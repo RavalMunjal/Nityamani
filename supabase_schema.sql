@@ -1,0 +1,591 @@
+-- ==============================================================================
+-- NITYAMANI B2B WHOLESALE SYSTEM — COMPLETE SUPABASE DATABASE SCHEMA
+-- Run this in your Supabase Project Dashboard -> SQL Editor -> New Query -> Run
+-- ==============================================================================
+
+-- 1. Enable Required Extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- ==============================================================================
+-- TABLES
+-- ==============================================================================
+
+-- Profiles (extends Supabase auth.users)
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  full_name TEXT NOT NULL,
+  phone TEXT NOT NULL DEFAULT '',
+  role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('pending', 'active', 'blocked')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Business Profiles (wholesale GST, business name, address)
+CREATE TABLE IF NOT EXISTS business_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE UNIQUE,
+  business_name TEXT NOT NULL,
+  gst_number TEXT,
+  billing_address TEXT NOT NULL,
+  city TEXT NOT NULL,
+  state TEXT NOT NULL,
+  pin_code TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Categories
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  description TEXT,
+  image_url TEXT,
+  display_order INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Products
+CREATE TABLE IF NOT EXISTS products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sku TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  description TEXT,
+  category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+  selling_unit TEXT NOT NULL DEFAULT 'piece',
+  pack_contents INT,
+  moq INT NOT NULL DEFAULT 1,
+  order_increment INT NOT NULL DEFAULT 1,
+  price_paise BIGINT NOT NULL, -- Integer paise (₹100 = 10000 paise)
+  is_published BOOLEAN DEFAULT TRUE,
+  is_archived BOOLEAN DEFAULT FALSE,
+  on_hand INT NOT NULL DEFAULT 0,
+  reserved INT NOT NULL DEFAULT 0,
+  available INT NOT NULL DEFAULT 0,
+  low_stock_threshold INT DEFAULT 10,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Product Images
+CREATE TABLE IF NOT EXISTS product_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  alt_text TEXT,
+  display_order INT DEFAULT 0,
+  is_primary BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Carts
+CREATE TABLE IF NOT EXISTS carts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Cart Items
+CREATE TABLE IF NOT EXISTS cart_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  quantity INT NOT NULL CHECK (quantity > 0),
+  price_paise_snapshot BIGINT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(cart_id, product_id)
+);
+
+-- Orders
+CREATE TABLE IF NOT EXISTS orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID NOT NULL REFERENCES profiles(id),
+  fulfilment_status TEXT NOT NULL DEFAULT 'requested' CHECK (
+    fulfilment_status IN ('requested', 'under_review', 'awaiting_payment', 'processing', 'ready', 'dispatched', 'delivered', 'cancelled', 'expired')
+  ),
+  payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK (
+    payment_status IN ('unpaid', 'partially_paid', 'paid', 'overpaid')
+  ),
+  shipping_address_snapshot JSONB NOT NULL DEFAULT '{}',
+  billing_address_snapshot JSONB NOT NULL DEFAULT '{}',
+  confirmed_total_paise BIGINT,
+  net_verified_paid_paise BIGINT NOT NULL DEFAULT 0,
+  outstanding_paise BIGINT NOT NULL DEFAULT 0,
+  overpaid_paise BIGINT NOT NULL DEFAULT 0,
+  notes TEXT,
+  internal_notes TEXT,
+  idempotency_key TEXT UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Order Items
+CREATE TABLE IF NOT EXISTS order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+  product_name_snapshot TEXT NOT NULL,
+  sku_snapshot TEXT NOT NULL,
+  unit_snapshot TEXT NOT NULL,
+  quantity INT NOT NULL,
+  unit_price_paise BIGINT NOT NULL,
+  total_paise BIGINT NOT NULL
+);
+
+-- Banners
+CREATE TABLE IF NOT EXISTS banners (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  image_url TEXT,
+  link_url TEXT,
+  display_order INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Quotations
+CREATE TABLE IF NOT EXISTS quotations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  version INT NOT NULL DEFAULT 1,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'agreed', 'superseded')),
+  quotation_number TEXT NOT NULL UNIQUE,
+  goods_total_paise BIGINT NOT NULL DEFAULT 0,
+  freight_paise BIGINT,
+  discount_paise BIGINT NOT NULL DEFAULT 0,
+  tax_paise BIGINT NOT NULL DEFAULT 0,
+  grand_total_paise BIGINT NOT NULL DEFAULT 0,
+  is_freight_confirmed BOOLEAN DEFAULT FALSE,
+  notes_to_customer TEXT,
+  issued_at TIMESTAMPTZ,
+  agreed_at TIMESTAMPTZ,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Payments (Manual Bank Transfer / UPI proofs)
+CREATE TABLE IF NOT EXISTS payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  amount_paise BIGINT NOT NULL,
+  payment_method TEXT NOT NULL DEFAULT 'bank_transfer',
+  reference_number TEXT,
+  payment_proof_url TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'rejected')),
+  verified_by UUID REFERENCES profiles(id),
+  verified_at TIMESTAMPTZ,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Notifications
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'info',
+  is_read BOOLEAN DEFAULT FALSE,
+  link_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ==============================================================================
+-- AUTOMATIC PROFILE TRIGGER ON SIGNUP
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, phone, role, status)
+  VALUES (
+    new.id,
+    new.email,
+    COALESCE(new.raw_user_meta_data->>'full_name', 'Valued Customer'),
+    COALESCE(new.raw_user_meta_data->>'phone', ''),
+    CASE WHEN new.email ILIKE '%admin%' THEN 'admin' ELSE 'customer' END,
+    'active'
+  )
+  ON CONFLICT (id) DO UPDATE SET status = 'active';
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ==============================================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- ==============================================================================
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE carts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE banners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quotations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- Helper to check if current user is admin
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND (role = 'admin' OR email ILIKE '%admin%')
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Drop old policies to avoid duplicate name conflicts on re-run
+DROP POLICY IF EXISTS "profiles_select" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert" ON profiles;
+DROP POLICY IF EXISTS "profiles_update" ON profiles;
+DROP POLICY IF EXISTS "biz_select" ON business_profiles;
+DROP POLICY IF EXISTS "biz_insert" ON business_profiles;
+DROP POLICY IF EXISTS "biz_update" ON business_profiles;
+DROP POLICY IF EXISTS "categories_select" ON categories;
+DROP POLICY IF EXISTS "categories_admin_all" ON categories;
+DROP POLICY IF EXISTS "products_select" ON products;
+DROP POLICY IF EXISTS "products_admin_all" ON products;
+DROP POLICY IF EXISTS "product_images_select" ON product_images;
+DROP POLICY IF EXISTS "product_images_admin_all" ON product_images;
+DROP POLICY IF EXISTS "carts_manage_own" ON carts;
+DROP POLICY IF EXISTS "carts_admin" ON carts;
+DROP POLICY IF EXISTS "cart_items_manage_own" ON cart_items;
+DROP POLICY IF EXISTS "cart_items_admin" ON cart_items;
+DROP POLICY IF EXISTS "orders_select_own" ON orders;
+DROP POLICY IF EXISTS "orders_insert_own" ON orders;
+DROP POLICY IF EXISTS "orders_admin_all" ON orders;
+DROP POLICY IF EXISTS "order_items_select" ON order_items;
+DROP POLICY IF EXISTS "order_items_insert" ON order_items;
+DROP POLICY IF EXISTS "order_items_admin_all" ON order_items;
+DROP POLICY IF EXISTS "banners_select" ON banners;
+DROP POLICY IF EXISTS "banners_admin_all" ON banners;
+DROP POLICY IF EXISTS "quotations_select" ON quotations;
+DROP POLICY IF EXISTS "quotations_admin_all" ON quotations;
+DROP POLICY IF EXISTS "payments_select_own" ON payments;
+DROP POLICY IF EXISTS "payments_insert_own" ON payments;
+DROP POLICY IF EXISTS "payments_admin_all" ON payments;
+DROP POLICY IF EXISTS "notifications_manage_own" ON notifications;
+
+-- Profiles:
+CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (auth.uid() = id OR public.is_admin());
+CREATE POLICY "profiles_insert" ON profiles FOR INSERT WITH CHECK (auth.uid() = id OR public.is_admin());
+CREATE POLICY "profiles_update" ON profiles FOR UPDATE USING (auth.uid() = id OR public.is_admin());
+
+-- Business Profiles:
+CREATE POLICY "biz_select" ON business_profiles FOR SELECT USING (profile_id = auth.uid() OR public.is_admin());
+CREATE POLICY "biz_insert" ON business_profiles FOR INSERT WITH CHECK (profile_id = auth.uid() OR public.is_admin());
+CREATE POLICY "biz_update" ON business_profiles FOR UPDATE USING (profile_id = auth.uid() OR public.is_admin());
+
+-- Categories: (Public can read active categories)
+CREATE POLICY "categories_select" ON categories FOR SELECT USING (
+  is_active = TRUE OR public.is_admin()
+);
+CREATE POLICY "categories_admin_all" ON categories FOR ALL USING (public.is_admin());
+
+-- Products: (Public can read published products)
+CREATE POLICY "products_select" ON products FOR SELECT USING (
+  (is_published = TRUE AND is_archived = FALSE) OR public.is_admin()
+);
+CREATE POLICY "products_admin_all" ON products FOR ALL USING (public.is_admin());
+
+-- Product Images: (Public can read images of published products)
+CREATE POLICY "product_images_select" ON product_images FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM products p
+    WHERE p.id = product_id AND p.is_published = TRUE
+  )
+  OR public.is_admin()
+);
+CREATE POLICY "product_images_admin_all" ON product_images FOR ALL USING (public.is_admin());
+
+-- Carts:
+CREATE POLICY "carts_manage_own" ON carts FOR ALL USING (customer_id = auth.uid());
+CREATE POLICY "carts_admin" ON carts FOR SELECT USING (public.is_admin());
+
+-- Cart Items:
+CREATE POLICY "cart_items_manage_own" ON cart_items FOR ALL USING (
+  EXISTS (SELECT 1 FROM carts WHERE id = cart_id AND customer_id = auth.uid())
+);
+CREATE POLICY "cart_items_admin" ON cart_items FOR SELECT USING (public.is_admin());
+
+-- Orders:
+CREATE POLICY "orders_select_own" ON orders FOR SELECT USING (customer_id = auth.uid() OR public.is_admin());
+CREATE POLICY "orders_insert_own" ON orders FOR INSERT WITH CHECK (customer_id = auth.uid());
+CREATE POLICY "orders_admin_all" ON orders FOR ALL USING (public.is_admin());
+
+-- Order Items:
+CREATE POLICY "order_items_select" ON order_items FOR SELECT USING (
+  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND customer_id = auth.uid())
+  OR public.is_admin()
+);
+CREATE POLICY "order_items_insert" ON order_items FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND customer_id = auth.uid())
+);
+CREATE POLICY "order_items_admin_all" ON order_items FOR ALL USING (public.is_admin());
+
+-- Banners:
+CREATE POLICY "banners_select" ON banners FOR SELECT USING (is_active = TRUE OR public.is_admin());
+CREATE POLICY "banners_admin_all" ON banners FOR ALL USING (public.is_admin());
+
+-- Quotations:
+CREATE POLICY "quotations_select" ON quotations FOR SELECT USING (
+  (EXISTS (SELECT 1 FROM orders WHERE id = order_id AND customer_id = auth.uid()) AND status IN ('published', 'agreed'))
+  OR public.is_admin()
+);
+CREATE POLICY "quotations_admin_all" ON quotations FOR ALL USING (public.is_admin());
+
+-- Payments:
+CREATE POLICY "payments_select_own" ON payments FOR SELECT USING (
+  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND customer_id = auth.uid())
+  OR public.is_admin()
+);
+CREATE POLICY "payments_insert_own" ON payments FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM orders WHERE id = order_id AND customer_id = auth.uid())
+);
+CREATE POLICY "payments_admin_all" ON payments FOR ALL USING (public.is_admin());
+
+-- Notifications:
+CREATE POLICY "notifications_manage_own" ON notifications FOR ALL USING (profile_id = auth.uid() OR public.is_admin());
+
+-- ==============================================================================
+-- STORAGE BUCKETS SETUP (product-images bucket)
+-- ==============================================================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "product_images_bucket_public_read" ON storage.objects;
+DROP POLICY IF EXISTS "product_images_bucket_admin_upload" ON storage.objects;
+DROP POLICY IF EXISTS "product_images_bucket_admin_update" ON storage.objects;
+DROP POLICY IF EXISTS "product_images_bucket_admin_delete" ON storage.objects;
+
+CREATE POLICY "product_images_bucket_public_read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'product-images');
+
+CREATE POLICY "product_images_bucket_admin_upload" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'product-images' AND public.is_admin());
+
+CREATE POLICY "product_images_bucket_admin_update" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'product-images' AND public.is_admin());
+
+CREATE POLICY "product_images_bucket_admin_delete" ON storage.objects
+  FOR DELETE USING (bucket_id = 'product-images' AND public.is_admin());
+
+-- ==============================================================================
+-- SEED DATA (Wholesale Categories & Products)
+-- ==============================================================================
+
+-- 1. Categories
+INSERT INTO categories (id, name, slug, description, display_order, is_active) VALUES
+('11111111-1111-1111-1111-111111111111', 'Mani Beads & Malas', 'mani-beads-malas', 'Authentic 108 mani malas, spathik, tulsi, and bone bead garlands', 1, TRUE),
+('22222222-2222-2222-2222-222222222222', 'Rudraksha Collection', 'rudraksha-collection', 'Original certified Nepali & Indonesian 1-14 Mukhi Rudraksha beads', 2, TRUE),
+('33333333-3333-3333-3333-333333333333', 'Crystal & Gem Bracelets', 'crystal-gem-bracelets', 'Wholesale gemstone stretch bracelets: Tiger Eye, Amethyst, Pyrite, Rose Quartz', 3, TRUE),
+('44444444-4444-4444-4444-444444444444', 'Pyramids & Energy Tumbles', 'pyramids-tumbles', 'Orgone pyramids, raw cluster stones, polished healing tumble sets', 4, TRUE),
+('55555555-5555-5555-5555-555555555555', 'Pooja & Spiritual Accessories', 'spiritual-accessories', 'Brass diyas, gomti chakra, shankh, and wholesale altar ritual items', 5, TRUE)
+ON CONFLICT (slug) DO UPDATE SET is_active = TRUE;
+
+-- 2. Initial Sample Products
+INSERT INTO products (
+  sku, name, slug, description, category_id, selling_unit, pack_contents, moq, order_increment, price_paise, is_published, is_archived, on_hand, reserved, available, low_stock_threshold
+) VALUES
+(
+  'NM-MALA-108',
+  'Original Spathik Crystal Mani Mala (108+1 Beads, 8mm)',
+  'original-spathik-crystal-mani-mala-108-beads-8mm',
+  'Pure natural quartz sphatik beads strung with knotting. Tested for natural cooling properties. Ideal for meditation, japa, and spiritual retail counters.',
+  '11111111-1111-1111-1111-111111111111',
+  'piece',
+  1,
+  10,
+  5,
+  35000, -- ₹350.00
+  TRUE,
+  FALSE,
+  250,
+  0,
+  250,
+  20
+),
+(
+  'NM-RUD-5M-10MM',
+  '5 Mukhi Natural Nepali Rudraksha Mala (7mm, 108 Beads)',
+  '5-mukhi-natural-nepali-rudraksha-mala',
+  'Wholesale pack of authentic 5 mukhi Nepali rudraksha beads with red cotton tassel. Natural dark brown lustre.',
+  '22222222-2222-2222-2222-222222222222',
+  'packet',
+  5,
+  10,
+  10,
+  18000, -- ₹180.00
+  TRUE,
+  FALSE,
+  500,
+  0,
+  500,
+  50
+),
+(
+  'NM-BRAC-TIGER-8',
+  'Natural Golden Tiger Eye Bracelet (8mm AAA Round Beads)',
+  'natural-golden-tiger-eye-bracelet-8mm',
+  'Premium silky chatoyant Tiger Eye stone bracelet with heavy grade elastic cord. Ready for retail packaging.',
+  '33333333-3333-3333-3333-333333333333',
+  'piece',
+  1,
+  20,
+  10,
+  12000, -- ₹120.00
+  TRUE,
+  FALSE,
+  400,
+  0,
+  400,
+  30
+),
+(
+  'NM-BRAC-PYRITE-8',
+  'Peruvian Pyrite Natural Stone Bracelet (8mm Golden Lustre)',
+  'peruvian-pyrite-natural-stone-bracelet-8mm',
+  'Heavy metallic lustre genuine pyrite beads. Popular wealth attractor stone in high wholesale demand.',
+  '33333333-3333-3333-3333-333333333333',
+  'piece',
+  1,
+  15,
+  5,
+  22000, -- ₹220.00
+  TRUE,
+  FALSE,
+  300,
+  0,
+  300,
+  25
+),
+(
+  'NM-PYR-ORGONE-70',
+  'Orgone Energy Pyramid with Copper Coil & 7 Chakra Stones (70mm)',
+  'orgone-energy-pyramid-copper-coil-7-chakra-70mm',
+  'High clarity resin pyramid with embedded copper swirl generator and layered crystal matrix.',
+  '44444444-4444-4444-4444-444444444444',
+  'piece',
+  1,
+  12,
+  6,
+  28000, -- ₹280.00
+  TRUE,
+  FALSE,
+  180,
+  0,
+  180,
+  15
+)
+ON CONFLICT (sku) DO UPDATE SET is_published = TRUE, is_archived = FALSE;
+
+-- 3. Initial Banners
+INSERT INTO banners (title, subtitle, display_order, is_active) VALUES
+('Direct Source Mani & Rudraksha Wholesale', 'Supplying temple stores, jewelers & spiritual resellers across India', 1, TRUE),
+('Premium Gemstone Bracelets Ready for Dispatch', 'Tiger Eye, Pyrite, Amethyst, Green Aventurine & more at factory rates', 2, TRUE)
+ON CONFLICT DO NOTHING;
+
+-- ==============================================================================
+-- 4. DEFAULT ADMIN USER CREATION (Instant Login: admin@nityamani.com / admin123)
+-- ==============================================================================
+
+-- Delete any existing broken user and identity with this email first to prevent conflict
+DELETE FROM auth.identities WHERE user_id = 'a0000000-0000-0000-0000-000000000001' OR provider_id = 'admin@nityamani.com';
+DELETE FROM auth.users WHERE email = 'admin@nityamani.com';
+
+-- Insert fresh confirmed admin in auth.users with all required string tokens non-null
+INSERT INTO auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  recovery_token,
+  confirmation_token,
+  email_change_token_new,
+  email_change,
+  email_change_token_current,
+  phone,
+  phone_change,
+  phone_change_token,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  created_at,
+  updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  'a0000000-0000-0000-0000-000000000001',
+  'authenticated',
+  'authenticated',
+  'admin@nityamani.com',
+  crypt('admin123', gen_salt('bf')),
+  NOW(),
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"full_name":"Nityamani Admin"}'::jsonb,
+  false,
+  NOW(),
+  NOW()
+);
+
+-- Insert matching identity record required by Supabase GoTrue Auth
+INSERT INTO auth.identities (
+  id,
+  user_id,
+  identity_data,
+  provider,
+  provider_id,
+  last_sign_in_at,
+  created_at,
+  updated_at
+) VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'a0000000-0000-0000-0000-000000000001',
+  json_build_object('sub', 'a0000000-0000-0000-0000-000000000001', 'email', 'admin@nityamani.com')::jsonb,
+  'email',
+  'admin@nityamani.com',
+  NOW(),
+  NOW(),
+  NOW()
+) ON CONFLICT (provider, provider_id) DO NOTHING;
+
+-- Insert admin profile
+INSERT INTO public.profiles (id, email, full_name, phone, role, status)
+VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'admin@nityamani.com',
+  'Nityamani Admin',
+  '9876543210',
+  'admin',
+  'active'
+)
+ON CONFLICT (id) DO UPDATE SET
+  role = 'admin',
+  status = 'active';
