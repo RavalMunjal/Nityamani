@@ -76,7 +76,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-text-light mb-1">{label}</label>
+      <label className="block text-xs font-medium text-text-muted mb-1">{label}</label>
       {children}
       {error && <p className="text-xs text-red-400 mt-0.5">{error}</p>}
       {hint && !error && <p className="text-xs text-text-muted mt-0.5">{hint}</p>}
@@ -85,11 +85,11 @@ function Field({
 }
 
 const INPUT =
-  'w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-brand-red'
+  'w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-text-main placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-brand-red'
 const ERR_INPUT = 'border-red-500 focus:ring-red-500'
 
 const DEFAULT_IMAGE_FALLBACK =
-  'https://images.unsplash.com/photo-1515082161172-2f3b9c8c9735?q=80&w=400&auto=format&fit=crop'
+  '/nityamani-logo-rounded.png'
 
 // ── Product Form Modal ─────────────────────────────────────────────────────
 function ProductModal({ product, onClose }: { product?: Product; onClose: () => void }) {
@@ -311,8 +311,9 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
       toast.success(isEdit ? 'Product updated!' : 'Product created!')
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products-catalog'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
       queryClient.invalidateQueries({ queryKey: ['featured-products'] })
-      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
       onClose()
     },
     onError: (err: Error) => toast.error(err.message),
@@ -323,24 +324,24 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-3xl bg-text-main rounded-t-3xl sm:rounded-2xl border border-text-main max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="relative w-full sm:max-w-3xl bg-white rounded-t-3xl sm:rounded-2xl border border-surface-border max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-text-main border-b border-text-main px-6 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-white border-b border-surface-border px-6 py-4 flex items-center justify-between z-10">
           <div>
-            <h2 className="text-lg font-display font-semibold text-white">
+            <h2 className="text-lg font-display font-semibold text-brand-blue">
               {isEdit ? 'Edit Product' : 'Add New Product'}
             </h2>
-            <p className="text-xs text-text-light">
+            <p className="text-xs text-text-muted">
               Fill in wholesale inventory details, materials, and buyer information
             </p>
           </div>
-          <button onClick={onClose} className="text-text-light hover:text-white p-1 rounded-lg">
+          <button onClick={onClose} className="text-text-muted hover:text-brand-blue p-1 rounded-lg">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab navigation */}
-        <div className="flex border-b border-text-main px-6 bg-text-main/80 overflow-x-auto">
+        <div className="flex border-b border-surface-border px-6 bg-surface-bg overflow-x-auto">
           {[
             { id: 'basic', label: '1. Basic Info', icon: Package },
             { id: 'images', label: '2. Product Images', icon: Upload },
@@ -354,8 +355,8 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
               className={cn(
                 'flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors',
                 activeTab === tab.id
-                  ? 'border-brand-red text-white bg-brand-red/10'
-                  : 'border-transparent text-text-light hover:text-white'
+                  ? 'border-brand-red text-brand-blue bg-brand-red/10'
+                  : 'border-transparent text-text-muted hover:text-brand-blue'
               )}
             >
               <tab.icon className="w-3.5 h-3.5" />
@@ -480,14 +481,14 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
                 </Field>
               </div>
 
-              <div className="flex items-center gap-3 pt-3 p-3 rounded-xl bg-text-main/50 border border-text-main">
+              <div className="flex items-center gap-3 pt-3 p-3 rounded-xl bg-surface-bg border border-surface-border">
                 <input
                   type="checkbox"
                   id="is_published"
                   className="w-4 h-4 accent-brand-red cursor-pointer"
                   {...form.register('is_published')}
                 />
-                <label htmlFor="is_published" className="text-sm text-text-light cursor-pointer">
+                <label htmlFor="is_published" className="text-sm text-text-muted cursor-pointer">
                   Publish to Live Catalogue (visible to all customer accounts immediately)
                 </label>
               </div>
@@ -498,14 +499,14 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
           {activeTab === 'images' && (
             <div className="space-y-5">
               <div>
-                <h3 className="text-sm font-semibold text-white mb-1">Upload Real Product Images</h3>
-                <p className="text-xs text-text-light">
+                <h3 className="text-sm font-semibold text-brand-blue mb-1">Upload Real Product Images</h3>
+                <p className="text-xs text-text-muted">
                   Images save to the official Supabase storage bucket and sync with all customer accounts.
                 </p>
               </div>
 
               {/* Upload Drop Area */}
-              <div className="border-2 border-dashed border-text-muted hover:border-brand-red rounded-2xl p-6 text-center bg-text-main/40 transition-colors">
+              <div className="border-2 border-dashed border-surface-border hover:border-brand-red rounded-2xl p-6 text-center bg-surface-bg/50 transition-colors">
                 <input
                   type="file"
                   id="image_upload"
@@ -525,7 +526,7 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
                       <Upload className="w-6 h-6" />
                     )}
                   </div>
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-brand-blue">
                     {isUploading ? 'Uploading to Supabase Storage…' : 'Click to select image from your device'}
                   </p>
                   <p className="text-xs text-text-muted">PNG, JPG, or WEBP (Max 5MB)</p>
@@ -539,7 +540,7 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
                   value={newImageUrl}
                   onChange={(e) => setNewImageUrl(e.target.value)}
                   placeholder="Or paste direct image URL (https://...)"
-                  className="flex-1 px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white placeholder-text-muted focus:ring-1 focus:ring-brand-red"
+                  className="flex-1 px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-text-main placeholder-text-muted focus:ring-1 focus:ring-brand-red"
                 />
                 <button
                   type="button"
@@ -552,12 +553,12 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
 
               {/* Current Images List */}
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-text-light uppercase tracking-wider">
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                   Product Images ({images.length})
                 </p>
 
                 {images.length === 0 ? (
-                  <div className="p-4 rounded-xl border border-text-main bg-text-main/50 text-center">
+                  <div className="p-4 rounded-xl border border-surface-border bg-surface-bg text-center">
                     <p className="text-xs text-text-muted">
                       No images added yet. (Will use high-resolution authentic gemstone fallback if omitted)
                     </p>
@@ -568,25 +569,25 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
                       <div
                         key={idx}
                         className={cn(
-                          'relative rounded-xl overflow-hidden border-2 bg-black/40 group aspect-square flex flex-col justify-between p-1.5',
-                          img.is_primary ? 'border-brand-red' : 'border-text-main'
+                          'relative rounded-xl overflow-hidden border-2 bg-surface-bg p-0.5 group aspect-square flex flex-col justify-between p-1.5',
+                          img.is_primary ? 'border-brand-red' : 'border-surface-border'
                         )}
                       >
                         <img
                           src={img.url}
                           alt="Product"
-                          className="absolute inset-0 w-full h-full object-cover -z-10"
+                          className="absolute inset-0 w-full h-full object-contain -z-10"
                         />
                         <div className="flex justify-between items-center z-10">
                           {img.is_primary ? (
-                            <span className="bg-brand-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                            <span className="bg-brand-pink text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
                               Primary
                             </span>
                           ) : (
                             <button
                               type="button"
                               onClick={() => setPrimaryImage(idx)}
-                              className="bg-black/70 hover:bg-brand-red text-white text-[10px] px-2 py-0.5 rounded-full shadow backdrop-blur-sm transition-colors"
+                              className="bg-black/70 hover:bg-brand-pink text-white text-[10px] px-2 py-0.5 rounded-full shadow backdrop-blur-sm transition-colors"
                             >
                               Set Primary
                             </button>
@@ -594,7 +595,7 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
                           <button
                             type="button"
                             onClick={() => removeImage(idx)}
-                            className="bg-red-600/90 text-white p-1 rounded-full hover:bg-red-700 shadow transition-colors"
+                            className="bg-red-600/90 text-brand-blue p-1 rounded-full hover:bg-red-700 shadow transition-colors"
                             title="Remove"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -612,10 +613,10 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
           {activeTab === 'specs' && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-white mb-1">
+                <h3 className="text-sm font-semibold text-brand-blue mb-1">
                   Mala, Rudraksha & Gemstone Specifications
                 </h3>
-                <p className="text-xs text-text-light">
+                <p className="text-xs text-text-muted">
                   Category-specific fields. Displayed accurately in product details.
                 </p>
               </div>
@@ -671,10 +672,10 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
           {activeTab === 'content' && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-white mb-1">
+                <h3 className="text-sm font-semibold text-brand-blue mb-1">
                   Product Content & Wholesale Information
                 </h3>
-                <p className="text-xs text-text-light">
+                <p className="text-xs text-text-muted">
                   Important: For spiritual items, describe traditional cultural beliefs with appropriate
                   phrasing ("Traditionally associated with...", "Commonly used for...").
                 </p>
@@ -729,7 +730,7 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
           )}
 
           {/* Modal Footer Controls */}
-          <div className="pt-4 border-t border-text-main flex items-center justify-between gap-3 sticky bottom-0 bg-text-main">
+          <div className="pt-4 border-t border-surface-border flex items-center justify-between gap-3 sticky bottom-0 bg-white">
             <div className="flex items-center gap-2">
               {activeTab !== 'basic' && (
                 <button
@@ -763,7 +764,7 @@ function ProductModal({ product, onClose }: { product?: Product; onClose: () => 
               <button
                 type="button"
                 onClick={onClose}
-                className="btn-ghost btn-sm text-text-light hover:text-white"
+                className="btn-ghost btn-sm text-text-muted hover:text-brand-blue"
               >
                 Cancel
               </button>
@@ -827,6 +828,7 @@ export default function AdminProductsPage() {
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products-catalog'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
       toast.success(vars.is_published ? 'Product unpublished' : 'Product published & notified to buyers!')
     },
   })
@@ -842,6 +844,7 @@ export default function AdminProductsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products-catalog'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
       toast.success('Product archived')
     },
   })
@@ -860,11 +863,11 @@ export default function AdminProductsPage() {
     <div className="p-4 md:p-6 animate-fade-in space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-display font-semibold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-display font-semibold text-brand-blue flex items-center gap-2">
             <Package className="w-6 h-6 text-brand-red" />
             Wholesale Products
           </h1>
-          <p className="text-text-light text-sm mt-0.5">
+          <p className="text-text-muted text-sm mt-0.5">
             {filtered.length} product{filtered.length !== 1 ? 's' : ''} in catalogue
           </p>
         </div>
@@ -887,7 +890,7 @@ export default function AdminProductsPage() {
                 'px-3 py-1.5 rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-colors',
                 filter === f
                   ? 'bg-brand-red/20 text-brand-pink border border-brand-red/30'
-                  : 'text-text-light hover:text-white border border-text-main'
+                  : 'text-text-muted hover:text-brand-blue border border-surface-border'
               )}
             >
               {f}
@@ -900,7 +903,7 @@ export default function AdminProductsPage() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Filter by name, SKU, category…"
-          className="px-3 py-1.5 rounded-lg text-xs bg-text-main border border-text-muted text-white placeholder-text-muted focus:ring-1 focus:ring-brand-red"
+          className="px-3 py-1.5 rounded-lg text-xs bg-white border border-surface-border text-text-main placeholder-text-muted focus:ring-1 focus:ring-brand-red"
         />
       </div>
 
@@ -908,19 +911,19 @@ export default function AdminProductsPage() {
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="skeleton h-20 rounded-xl bg-text-main" />
+            <div key={i} className="skeleton h-20 rounded-xl bg-white" />
           ))}
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && filtered.length === 0 && (
-        <div className="card bg-text-main border-text-main p-16 text-center">
+        <div className="card bg-white border-surface-border p-16 text-center">
           <div className="w-16 h-16 rounded-2xl bg-brand-red/20 text-brand-pink flex items-center justify-center mx-auto mb-4">
             <Package className="w-8 h-8" />
           </div>
-          <p className="text-white font-medium text-base">No products found</p>
-          <p className="text-text-light text-xs mt-1">
+          <p className="text-brand-blue font-medium text-base">No products found</p>
+          <p className="text-text-muted text-xs mt-1">
             {searchTerm ? 'Try a different search keyword' : 'Create your first product in the catalogue'}
           </p>
           <button
@@ -934,18 +937,18 @@ export default function AdminProductsPage() {
 
       {/* Products Table */}
       {!isLoading && filtered.length > 0 && (
-        <div className="card bg-text-main border-text-main overflow-hidden shadow-xl">
+        <div className="card bg-white border-surface-border overflow-hidden shadow-xl">
           <div className="table-container border-0 overflow-x-auto">
             <table className="nm-table w-full">
               <thead>
-                <tr className="border-b border-text-main/80 text-left">
-                  <th className="text-text-light py-3 px-4">Product</th>
-                  <th className="text-text-light py-3 px-4 hidden sm:table-cell">SKU</th>
-                  <th className="text-text-light py-3 px-4 hidden md:table-cell">Category</th>
-                  <th className="text-text-light py-3 px-4">Wholesale Price</th>
-                  <th className="text-text-light py-3 px-4 hidden sm:table-cell">Stock / MOQ</th>
-                  <th className="text-text-light py-3 px-4">Status</th>
-                  <th className="text-text-light py-3 px-4 text-right">Actions</th>
+                <tr className="border-b border-surface-border/80 text-left">
+                  <th className="text-text-muted py-3 px-4">Product</th>
+                  <th className="text-text-muted py-3 px-4 hidden sm:table-cell">SKU</th>
+                  <th className="text-text-muted py-3 px-4 hidden md:table-cell">Category</th>
+                  <th className="text-text-muted py-3 px-4">Wholesale Price</th>
+                  <th className="text-text-muted py-3 px-4 hidden sm:table-cell">Stock / MOQ</th>
+                  <th className="text-text-muted py-3 px-4">Status</th>
+                  <th className="text-text-muted py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-text-main/60">
@@ -956,21 +959,21 @@ export default function AdminProductsPage() {
                   const primaryImage = sortedImages[0]?.url || DEFAULT_IMAGE_FALLBACK
 
                   return (
-                    <tr key={p.id} className="hover:bg-text-main/40 transition-colors">
+                    <tr key={p.id} className="hover:bg-surface-bg/50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-black/40 overflow-hidden flex-shrink-0 border border-text-main">
+                          <div className="w-12 h-12 rounded-xl bg-surface-bg p-0.5 overflow-hidden flex-shrink-0 border border-surface-border">
                             <img
                               src={primaryImage}
                               alt={p.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                               onError={(e) => {
                                 e.currentTarget.src = DEFAULT_IMAGE_FALLBACK
                               }}
                             />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-white truncate max-w-[200px]">
+                            <p className="text-sm font-semibold text-brand-blue truncate max-w-[200px]">
                               {p.name}
                             </p>
                             <p className="text-xs text-text-muted capitalize">
@@ -981,10 +984,10 @@ export default function AdminProductsPage() {
                         </div>
                       </td>
                       <td className="py-3 px-4 hidden sm:table-cell">
-                        <span className="text-xs font-mono text-text-light">{p.sku}</span>
+                        <span className="text-xs font-mono text-text-muted">{p.sku}</span>
                       </td>
                       <td className="py-3 px-4 hidden md:table-cell">
-                        <span className="text-xs text-text-light">
+                        <span className="text-xs text-text-muted">
                           {(p.category as any)?.name ?? '—'}
                         </span>
                       </td>
@@ -1025,7 +1028,7 @@ export default function AdminProductsPage() {
                             href={`/app/product/${p.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn-icon btn-ghost text-text-light hover:text-white btn-sm"
+                            className="btn-icon btn-ghost text-text-muted hover:text-brand-blue btn-sm"
                             title="Preview Customer View"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
@@ -1033,7 +1036,7 @@ export default function AdminProductsPage() {
 
                           {/* Edit button */}
                           <button
-                            className="btn-icon btn-ghost text-text-light hover:text-white btn-sm"
+                            className="btn-icon btn-ghost text-text-muted hover:text-brand-blue btn-sm"
                             onClick={() => setModal({ open: true, product: p })}
                             title="Edit Product & Specs"
                           >
@@ -1042,7 +1045,7 @@ export default function AdminProductsPage() {
 
                           {/* Toggle Publish */}
                           <button
-                            className="btn-icon btn-ghost text-text-light hover:text-white btn-sm"
+                            className="btn-icon btn-ghost text-text-muted hover:text-brand-blue btn-sm"
                             onClick={() =>
                               togglePublish.mutate({
                                 id: p.id,
@@ -1061,7 +1064,7 @@ export default function AdminProductsPage() {
 
                           {/* Archive */}
                           <button
-                            className="btn-icon btn-ghost text-text-light hover:text-red-400 btn-sm"
+                            className="btn-icon btn-ghost text-text-muted hover:text-red-400 btn-sm"
                             onClick={() => {
                               if (confirm(`Archive "${p.name}"? It will be removed from customer catalogue.`)) {
                                 archiveProduct.mutate(p.id)

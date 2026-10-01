@@ -141,7 +141,7 @@ export default function CustomerProductsPage() {
 
       {/* Product Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="card p-0 overflow-hidden border-surface-border">
               <div className="skeleton h-48 w-full rounded-none" />
@@ -162,7 +162,7 @@ export default function CustomerProductsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {filteredProducts.map(p => {
             const primaryImg = p.images?.find((img: any) => img.is_primary) ?? p.images?.[0]
             const isLowStock = p.available <= p.low_stock_threshold && p.available > 0

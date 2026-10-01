@@ -36,8 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: currentUser.email ?? '',
         full_name: currentUser.user_metadata?.full_name ?? currentUser.email?.split('@')[0] ?? 'User',
         phone: '',
-        role: 'admin',
-        status: 'active', // Auto-activate OAuth users
+        role: 'customer',
+        status: 'pending',
       }
       const { data: insertedProfile } = await supabase.from('profiles').insert(newProfile).select().single()
       pData = insertedProfile
@@ -60,20 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .single()
 
     const userEmail = (currentUser?.email ?? pData?.email ?? '').toLowerCase()
-
-    // Automatically ensure the authenticated user has role = 'admin' in Supabase database
-    // so PostgreSQL RLS policies grant full access to add products, upload images & manage orders
-    if (pData && pData.role !== 'admin') {
-      const { data: updatedProfile } = await supabase
-        .from('profiles')
-        .update({ role: 'admin', status: 'active' })
-        .eq('id', userId)
-        .select()
-        .maybeSingle()
-      if (updatedProfile) {
-        pData = updatedProfile
-      }
-    }
 
     // Auto-activate existing pending users so they can immediately test the app
     if (pData && pData.status === 'pending') {
@@ -133,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setBusinessProfile(null)
   }
 
-  const isAdmin = Boolean(user)
+  const isAdmin = profile?.role === 'admin'
 
   return (
     <AuthContext.Provider value={{ user, session, profile, businessProfile, isLoading, isAdmin, signOut, refreshProfile }}>

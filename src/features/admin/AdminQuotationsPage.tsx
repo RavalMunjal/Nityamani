@@ -86,15 +86,15 @@ export default function AdminQuotationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-bold text-white">Wholesale Quotations</h1>
-        <p className="text-sm text-text-light">
+        <h1 className="text-2xl font-display font-bold text-brand-blue">Wholesale Quotations</h1>
+        <p className="text-sm text-text-muted">
           Prepare final freight pricing and send official quotes to buyers
         </p>
       </div>
 
       {/* Orders requiring quotation */}
-      <div className="bg-text-main border border-text-main rounded-2xl p-5 shadow-xl">
-        <h2 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+      <div className="bg-white border border-surface-border rounded-2xl p-5 shadow-xl">
+        <h2 className="text-base font-semibold text-brand-blue mb-3 flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand-red" /> Pending Orders for Quotation
         </h2>
 
@@ -111,7 +111,7 @@ export default function AdminQuotationsPage() {
                 return (
                   <div
                     key={order.id}
-                    className="p-4 rounded-xl bg-text-main/80 border border-text-main flex flex-col justify-between gap-3"
+                    className="p-4 rounded-xl bg-surface-bg border border-surface-border flex flex-col justify-between gap-3"
                   >
                     <div>
                       <div className="flex items-center justify-between">
@@ -122,10 +122,10 @@ export default function AdminQuotationsPage() {
                           {order.fulfilment_status.replace('_', ' ')}
                         </span>
                       </div>
-                      <p className="text-sm font-semibold text-white mt-1">
+                      <p className="text-sm font-semibold text-brand-blue mt-1">
                         {order.customer?.full_name || 'Wholesale Buyer'}
                       </p>
-                      <p className="text-xs text-text-light">
+                      <p className="text-xs text-text-muted">
                         {order.items?.length || 0} line item(s) • Subtotal: {formatINR(goodsTotal)}
                       </p>
                     </div>
@@ -148,9 +148,9 @@ export default function AdminQuotationsPage() {
       </div>
 
       {/* Active Quotations History */}
-      <div className="bg-text-main border border-text-main rounded-2xl overflow-hidden shadow-xl">
-        <div className="px-6 py-4 border-b border-text-main flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+      <div className="bg-white border border-surface-border rounded-2xl overflow-hidden shadow-xl">
+        <div className="px-6 py-4 border-b border-surface-border flex items-center justify-between">
+          <h2 className="text-base font-semibold text-brand-blue flex items-center gap-2">
             <FileText className="w-4 h-4 text-brand-red" /> Issued Quotations
           </h2>
           <span className="text-xs text-text-muted">{quotations.length} records</span>
@@ -163,7 +163,7 @@ export default function AdminQuotationsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-text-main/60 border-b border-text-main text-text-light text-xs uppercase">
+              <thead className="bg-surface-bg border-b border-surface-border text-text-muted text-xs uppercase">
                 <tr>
                   <th className="px-6 py-3">Quote #</th>
                   <th className="px-6 py-3">Goods</th>
@@ -173,9 +173,9 @@ export default function AdminQuotationsPage() {
                   <th className="px-6 py-3">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-text-main text-text-light">
+              <tbody className="divide-y divide-text-main text-text-muted">
                 {quotations.map(q => (
-                  <tr key={q.id} className="hover:bg-text-main/40 transition-colors">
+                  <tr key={q.id} className="hover:bg-surface-bg/50 transition-colors">
                     <td className="px-6 py-3.5 font-mono text-xs text-brand-pink font-semibold">
                       {q.quotation_number}
                     </td>
@@ -183,7 +183,7 @@ export default function AdminQuotationsPage() {
                     <td className="px-6 py-3.5 text-xs">
                       {q.freight_paise ? formatINR(q.freight_paise) : 'Free'}
                     </td>
-                    <td className="px-6 py-3.5 text-sm font-bold text-white">
+                    <td className="px-6 py-3.5 text-sm font-bold text-brand-blue">
                       {formatINR(q.grand_total_paise)}
                     </td>
                     <td className="px-6 py-3.5">
@@ -210,22 +210,22 @@ export default function AdminQuotationsPage() {
       {/* Quote Creation Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedOrder(null)} />
-          <div className="relative w-full max-w-lg bg-text-main rounded-2xl border border-text-main overflow-hidden shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-text-main pb-3">
-              <h2 className="text-lg font-display font-semibold text-white">Generate Quotation</h2>
-              <button onClick={() => setSelectedOrder(null)} className="text-text-light hover:text-white">
+          <div className="absolute inset-0 bg-surface-bg p-0.5 backdrop-blur-sm" onClick={() => setSelectedOrder(null)} />
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-surface-border overflow-hidden shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-surface-border pb-3">
+              <h2 className="text-lg font-display font-semibold text-brand-blue">Generate Quotation</h2>
+              <button onClick={() => setSelectedOrder(null)} className="text-text-muted hover:text-brand-blue">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-3 bg-text-main rounded-xl space-y-1 text-xs">
-              <p className="text-text-light">
-                Customer: <span className="text-white font-medium">{selectedOrder.customer?.full_name}</span>
+            <div className="p-3 bg-white rounded-xl space-y-1 text-xs">
+              <p className="text-text-muted">
+                Customer: <span className="text-brand-blue font-medium">{selectedOrder.customer?.full_name}</span>
               </p>
-              <p className="text-text-light">
+              <p className="text-text-muted">
                 Goods Subtotal:{' '}
-                <span className="text-white font-semibold">
+                <span className="text-brand-blue font-semibold">
                   {formatINR(selectedOrder.items?.reduce((s, it) => s + (it.total_paise || 0), 0) ?? 0)}
                 </span>
               </p>
@@ -233,7 +233,7 @@ export default function AdminQuotationsPage() {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-text-light mb-1">
+                <label className="block text-xs font-medium text-text-muted mb-1">
                   Freight / Courier Charges (in Paise) *
                 </label>
                 <input
@@ -243,7 +243,7 @@ export default function AdminQuotationsPage() {
                   value={freightPaise}
                   onChange={e => setFreightPaise(Number(e.target.value))}
                   placeholder="e.g. 25000 for ₹250"
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:outline-none focus:ring-1 focus:ring-brand-red"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-red"
                 />
                 <p className="text-[11px] text-text-muted mt-1">
                   Current preview: {formatINR(freightPaise)}
@@ -251,7 +251,7 @@ export default function AdminQuotationsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-text-light mb-1">
+                <label className="block text-xs font-medium text-text-muted mb-1">
                   Wholesale Discount (in Paise)
                 </label>
                 <input
@@ -261,12 +261,12 @@ export default function AdminQuotationsPage() {
                   value={discountPaise}
                   onChange={e => setDiscountPaise(Number(e.target.value))}
                   placeholder="0"
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:outline-none focus:ring-1 focus:ring-brand-red"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-red"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-text-light mb-1">
+                <label className="block text-xs font-medium text-text-muted mb-1">
                   Notes for Buyer (dispatch timeline, courier info)
                 </label>
                 <textarea
@@ -274,12 +274,12 @@ export default function AdminQuotationsPage() {
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   placeholder="e.g. Dispatched via DTDC Air. Delivery in 3-4 working days."
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:outline-none focus:ring-1 focus:ring-brand-red"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-red"
                 />
               </div>
 
               <div className="p-3 bg-brand-950/60 border border-brand-blue/40 rounded-xl flex items-center justify-between">
-                <span className="text-xs text-text-light font-medium">Grand Total to Buyer:</span>
+                <span className="text-xs text-text-muted font-medium">Grand Total to Buyer:</span>
                 <span className="text-base font-bold text-brand-pink">
                   {formatINR(
                     Math.max(
@@ -297,7 +297,7 @@ export default function AdminQuotationsPage() {
               <button
                 type="button"
                 onClick={() => setSelectedOrder(null)}
-                className="btn-ghost flex-1 text-text-light border border-text-muted hover:border-text-muted"
+                className="btn-ghost flex-1 text-text-muted border border-surface-border hover:border-surface-border"
               >
                 Cancel
               </button>

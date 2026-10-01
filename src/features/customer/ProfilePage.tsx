@@ -92,20 +92,7 @@ export default function CustomerProfilePage() {
         )}
       </div>
 
-      {/* Admin Panel Quick Access */}
-      <div className="card p-5 bg-gradient-to-r from-brand-blue to-brand-blue/95 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md border border-brand-yellow/30">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-yellow text-brand-blue px-2 py-0.5 rounded shadow-sm">Store Admin Access</span>
-            <h3 className="font-bold text-white text-base">Admin Management Suite</h3>
-          </div>
-          <p className="text-xs text-white/80">Add and edit products, upload stone images, review wholesale customer orders & broadcast announcements.</p>
-        </div>
-        <NavLink to="/admin" className="btn-primary bg-brand-red text-white hover:bg-brand-red/90 text-xs px-4 py-2.5 rounded-xl font-bold shrink-0 shadow-sm flex items-center justify-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-brand-yellow" />
-          <span>Open Admin Panel →</span>
-        </NavLink>
-      </div>
+
 
       {/* Account Overview Card */}
       <div className="card p-6 bg-white space-y-6">

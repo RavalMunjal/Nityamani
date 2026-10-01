@@ -244,7 +244,7 @@ export default function AuthPage() {
         {/* decorative circles */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-brand-yellow/10 blur-3xl pointer-events-none" />
         <div className="relative">
-          <img src="/nm-icon.svg" alt="Nityamani" className="h-16 w-auto object-contain mx-auto mb-4 drop-shadow-sm" />
+          <img src="/nityamani-logo-rounded.png" alt="Nityamani" className="h-14 sm:h-16 w-auto object-contain mx-auto mb-4 drop-shadow-sm rounded-lg" />
           <p className="text-text-muted text-sm font-medium">Premium Wholesale — Beads · Crystals · Rudraksha</p>
         </div>
       </div>

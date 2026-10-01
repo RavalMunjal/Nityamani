@@ -51,11 +51,14 @@ export async function broadcastAdminAnnouncement({
   type?: 'general' | 'product' | 'price' | 'stock'
   linkUrl?: string
 }) {
-  // Fetch all customer profiles
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { count: 0 }
+
+  // Fetch all profiles except the sender (allows testing across all accounts)
   const { data: customers, error } = await supabase
     .from('profiles')
     .select('id')
-    .eq('role', 'customer')
+    .neq('id', user.id)
 
   if (error || !customers || customers.length === 0) return { count: 0 }
 

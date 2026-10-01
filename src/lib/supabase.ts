@@ -10,8 +10,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
+const isAdminApp = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storageKey: isAdminApp ? 'sb-admin-auth-token' : 'sb-customer-auth-token',
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,

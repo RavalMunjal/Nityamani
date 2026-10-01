@@ -1,7 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Home, Grid3X3, ShoppingCart, Package, Video, Bell, User, LogOut, Gem, Menu, X, ShieldCheck } from 'lucide-react'
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/features/auth/AuthContext'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,38 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
   const { profile, user, signOut } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const queryClient = useQueryClient()
+
+  // Real-time notifications subscription via Supabase WebSockets (Replaces Socket.io)
+  useEffect(() => {
+    if (!user) return
+
+    const channel = supabase
+      .channel('customer-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          // Client-side filtering to guarantee it works without requiring cloud replication column filters
+          if (payload.new && payload.new.profile_id === user.id) {
+            if (payload.new.title) {
+              toast.success(payload.new.title, { icon: '🔔', duration: 4000 })
+            }
+            queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
+            queryClient.invalidateQueries({ queryKey: ['customer-notifications'] })
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user, queryClient])
 
   const { data: cartCount = 0 } = useQuery({
     queryKey: ['cart-count', user?.id],
@@ -54,9 +87,8 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       {/* Top nav — desktop */}
       <header className="hidden md:block sticky top-0 z-40 bg-brand-yellow border-b border-brand-yellow safe-top shadow-sm">
         <div className="page-container flex items-center justify-between h-16">
-          <NavLink to="/app" className="flex items-center gap-2">
-            <img src="/nm-icon.svg" alt="Nityamani Logo" className="h-9 w-auto object-contain" />
-            <span className="font-display font-bold text-xl text-brand-blue tracking-wider">NITYAMANI</span>
+          <NavLink to="/app" className="flex items-center transition-transform hover:scale-105">
+            <img src="/nityamani-logo-rounded.png" alt="Nityamani" className="h-10 sm:h-11 w-auto object-contain rounded-lg drop-shadow-sm" />
           </NavLink>
 
           <nav className="flex items-center gap-1">
@@ -80,14 +112,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
           </nav>
 
           <div className="flex items-center gap-2">
-            <NavLink
-              to="/admin"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-brand-blue text-white hover:bg-brand-red transition-all shadow-sm border border-brand-blue"
-              title="Open Admin Management Panel"
-            >
-              <ShieldCheck className="w-4 h-4 text-brand-yellow" />
-              <span>Admin Panel</span>
-            </NavLink>
+
 
             <NavLink to="/app/notifications" className="btn-icon btn-ghost relative">
               <Bell className="w-5 h-5 text-brand-blue" />
@@ -112,18 +137,11 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       {/* Mobile top bar */}
       <header className="md:hidden sticky top-0 z-40 bg-brand-yellow border-b border-brand-yellow safe-top shadow-sm">
         <div className="flex items-center justify-between px-4 h-14">
-          <NavLink to="/app" className="flex items-center gap-2">
-            <img src="/nm-icon.svg" alt="Nityamani" className="h-7 w-auto object-contain" />
-            <span className="font-display font-bold text-lg text-brand-blue tracking-wider">NITYAMANI</span>
+          <NavLink to="/app" className="flex items-center">
+            <img src="/nityamani-logo-rounded.png" alt="Nityamani" className="h-8 w-auto object-contain rounded-sm" />
           </NavLink>
           <div className="flex items-center gap-1.5">
-            <NavLink
-              to="/admin"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-brand-blue text-brand-yellow shadow-sm"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin</span>
-            </NavLink>
+
 
             <NavLink to="/app/notifications" className="btn-icon btn-ghost relative">
               <Bell className="w-5 h-5 text-brand-blue" />

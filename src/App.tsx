@@ -45,16 +45,17 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 function RequireAdmin({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, isAdmin } = useAuth()
   if (isLoading) return <LoadingScreen />
   if (!user) return <Navigate to="/auth" replace />
+  if (!isAdmin) return <Navigate to="/app" replace />
   return <>{children}</>
 }
 
 function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, isAdmin } = useAuth()
   if (isLoading) return <LoadingScreen />
-  if (user) return <Navigate to="/admin" replace />
+  if (user) return <Navigate to={isAdmin ? "/admin" : "/app"} replace />
   return <>{children}</>
 }
 
@@ -73,7 +74,7 @@ function ComingSoon({ title }: { title: string }) {
 function LoadingScreen() {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-surface-bg gap-4">
-      <img src="/nm-icon.svg" alt="Nityamani" className="w-16 h-16 animate-pulse-soft" />
+      <img src="/nityamani-logo-rounded.png" alt="Nityamani" className="w-56 h-auto object-contain animate-pulse-soft rounded-lg drop-shadow-lg" />
       <div className="nm-spinner scale-125" />
     </div>
   )

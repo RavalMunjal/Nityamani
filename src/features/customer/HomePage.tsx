@@ -149,7 +149,7 @@ export default function HomePage() {
             </div>
           )}
           {!isLoading && displayProducts.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
               {displayProducts.map(p => <ProductCard key={p.id} product={p} />)}
             </div>
           )}
@@ -236,7 +236,7 @@ export default function HomePage() {
                   </Link>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                   {categories.slice(0, 4).map(cat => (
                     <Link key={cat.id} to={`/app/products?category=${cat.id}`} className="group block h-40 md:h-56 relative rounded-2xl overflow-hidden shadow-sm">
                       <img 
@@ -278,13 +278,13 @@ export default function HomePage() {
               </div>
 
               {isLoading && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                   {Array(4).fill(0).map((_, i) => <ProductSkeleton key={i} />)}
                 </div>
               )}
 
               {!isLoading && displayProducts.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                   {displayProducts.map(p => <ProductCard key={p.id} product={p} />)}
                 </div>
               )}

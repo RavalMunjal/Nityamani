@@ -19,71 +19,71 @@ export default function AdminSettingsPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-bold text-white">System Settings</h1>
-        <p className="text-sm text-text-light">
+        <h1 className="text-2xl font-display font-bold text-brand-blue">System Settings</h1>
+        <p className="text-sm text-text-muted">
           Configure default wholesale bank account details and buyer payment instructions
         </p>
       </div>
 
-      <form onSubmit={handleSave} className="bg-text-main border border-text-main rounded-2xl p-6 shadow-xl space-y-6">
-        <div className="flex items-center gap-2 text-white font-semibold border-b border-text-main pb-3">
+      <form onSubmit={handleSave} className="bg-white border border-surface-border rounded-2xl p-6 shadow-xl space-y-6">
+        <div className="flex items-center gap-2 text-brand-blue font-semibold border-b border-surface-border pb-3">
           <CreditCard className="w-5 h-5 text-brand-red" />
           <span>B2B Bank Transfer Details (Shown to Buyers on Orders)</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">Beneficiary Name</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">Beneficiary Name</label>
             <input
               type="text"
               value={bankDetails.accountName}
               onChange={e => setBankDetails({ ...bankDetails, accountName: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:ring-1 focus:ring-brand-red"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:ring-1 focus:ring-brand-red"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">Bank Name & Branch</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">Bank Name & Branch</label>
             <input
               type="text"
               value={bankDetails.bankName}
               onChange={e => setBankDetails({ ...bankDetails, bankName: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:ring-1 focus:ring-brand-red"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:ring-1 focus:ring-brand-red"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">Current Account Number</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">Current Account Number</label>
             <input
               type="text"
               value={bankDetails.accountNumber}
               onChange={e => setBankDetails({ ...bankDetails, accountNumber: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:ring-1 focus:ring-brand-red font-mono"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:ring-1 focus:ring-brand-red font-mono"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">IFSC Code</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">IFSC Code</label>
             <input
               type="text"
               value={bankDetails.ifsc}
               onChange={e => setBankDetails({ ...bankDetails, ifsc: e.target.value.toUpperCase() })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:ring-1 focus:ring-brand-red font-mono"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:ring-1 focus:ring-brand-red font-mono"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-text-light mb-1">Business UPI ID</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">Business UPI ID</label>
             <input
               type="text"
               value={bankDetails.upiId}
               onChange={e => setBankDetails({ ...bankDetails, upiId: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:ring-1 focus:ring-brand-red font-mono"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:ring-1 focus:ring-brand-red font-mono"
             />
           </div>
         </div>
 
-        <div className="pt-2 border-t border-text-main flex justify-end">
+        <div className="pt-2 border-t border-surface-border flex justify-end">
           <button type="submit" className="btn-primary flex items-center gap-2">
             <Save className="w-4 h-4" /> Save Bank Configuration
           </button>

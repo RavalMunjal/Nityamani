@@ -20,7 +20,7 @@ const categorySchema = z.object({
 type CategoryForm = z.infer<typeof categorySchema>
 
 const INPUT =
-  'w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-brand-red'
+  'w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-text-main placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-brand-red'
 
 function CategoryModal({
   category,
@@ -69,6 +69,7 @@ function CategoryModal({
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] })
       queryClient.invalidateQueries({ queryKey: ['categories-admin'] })
       queryClient.invalidateQueries({ queryKey: ['categories-catalog'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
       onClose()
     },
     onError: (err: Error) => toast.error(err.message),
@@ -78,20 +79,20 @@ function CategoryModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-text-main rounded-2xl border border-text-main overflow-hidden shadow-2xl">
-        <div className="bg-text-main border-b border-text-main px-5 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-display font-semibold text-white">
+      <div className="absolute inset-0 bg-surface-bg p-0.5 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-surface-border overflow-hidden shadow-2xl">
+        <div className="bg-white border-b border-surface-border px-5 py-4 flex items-center justify-between">
+          <h2 className="text-lg font-display font-semibold text-brand-blue">
             {isEdit ? 'Edit Category' : 'Add New Category'}
           </h2>
-          <button onClick={onClose} className="text-text-light hover:text-white">
+          <button onClick={onClose} className="text-text-muted hover:text-brand-blue">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={form.handleSubmit((d: any) => save.mutate(d))} className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">Category Name *</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">Category Name *</label>
             <input
               className={INPUT}
               placeholder="e.g. Mani Beads & Malas"
@@ -110,13 +111,13 @@ function CategoryModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">URL Slug *</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">URL Slug *</label>
             <input className={INPUT} placeholder="mani-beads-malas" {...form.register('slug')} />
             {errors.slug && <p className="text-xs text-red-400 mt-0.5">{errors.slug.message as string}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">Description</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">Description</label>
             <textarea
               rows={2}
               className={INPUT}
@@ -126,7 +127,7 @@ function CategoryModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">Category Image URL</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">Category Image URL</label>
             <input
               type="url"
               className={INPUT}
@@ -136,7 +137,7 @@ function CategoryModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-text-light mb-1">Display Order</label>
+            <label className="block text-xs font-medium text-text-muted mb-1">Display Order</label>
             <input type="number" className={INPUT} {...form.register('display_order')} />
           </div>
 
@@ -147,7 +148,7 @@ function CategoryModal({
               className="w-4 h-4 accent-brand-red"
               {...form.register('is_active')}
             />
-            <label htmlFor="cat_active" className="text-sm text-text-light cursor-pointer">
+            <label htmlFor="cat_active" className="text-sm text-text-muted cursor-pointer">
               Active (visible to wholesale buyers)
             </label>
           </div>
@@ -156,7 +157,7 @@ function CategoryModal({
             <button
               type="button"
               onClick={onClose}
-              className="btn-ghost flex-1 text-text-light border border-text-muted hover:border-text-muted"
+              className="btn-ghost flex-1 text-text-muted border border-surface-border hover:border-surface-border"
             >
               Cancel
             </button>
@@ -205,6 +206,7 @@ export default function AdminCategoriesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] })
       queryClient.invalidateQueries({ queryKey: ['categories-catalog'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
       toast.success('Category status updated')
     },
   })
@@ -214,8 +216,8 @@ export default function AdminCategoriesPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white">Categories</h1>
-          <p className="text-sm text-text-light">
+          <h1 className="text-2xl font-display font-bold text-brand-blue">Categories</h1>
+          <p className="text-sm text-text-muted">
             Manage wholesale product groupings and catalogue hierarchy
           </p>
         </div>
@@ -228,13 +230,13 @@ export default function AdminCategoriesPage() {
       </div>
 
       {/* Categories Table */}
-      <div className="bg-text-main border border-text-main rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-surface-border rounded-2xl overflow-hidden shadow-xl">
         {isLoading ? (
           <div className="p-8 text-center text-text-muted">Loading categories...</div>
         ) : categories.length === 0 ? (
-          <div className="p-12 text-center text-text-light">
+          <div className="p-12 text-center text-text-muted">
             <Layers className="w-10 h-10 mx-auto mb-3 text-text-muted" />
-            <p className="font-semibold text-white">No categories found</p>
+            <p className="font-semibold text-brand-blue">No categories found</p>
             <p className="text-xs text-text-muted mt-1">
               Add your first category or run the SQL seed file in Supabase.
             </p>
@@ -242,7 +244,7 @@ export default function AdminCategoriesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-text-main/80 border-b border-text-main text-text-light text-xs uppercase">
+              <thead className="bg-surface-bg border-b border-surface-border text-text-muted text-xs uppercase">
                 <tr>
                   <th className="px-6 py-3.5">Category</th>
                   <th className="px-6 py-3.5">Slug</th>
@@ -251,18 +253,18 @@ export default function AdminCategoriesPage() {
                   <th className="px-6 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-text-main text-text-light">
+              <tbody className="divide-y divide-text-main text-text-muted">
                 {categories.map(cat => (
-                  <tr key={cat.id} className="hover:bg-text-main/40 transition-colors">
+                  <tr key={cat.id} className="hover:bg-surface-bg/50 transition-colors">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-semibold text-white">{cat.name}</p>
+                        <p className="font-semibold text-brand-blue">{cat.name}</p>
                         {cat.description && (
                           <p className="text-xs text-text-muted line-clamp-1">{cat.description}</p>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-text-light">{cat.slug}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-text-muted">{cat.slug}</td>
                     <td className="px-6 py-4 text-center text-xs">{cat.display_order}</td>
                     <td className="px-6 py-4 text-center">
                       <button
@@ -278,7 +280,7 @@ export default function AdminCategoriesPage() {
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => setModal({ open: true, category: cat })}
-                        className="p-2 text-text-light hover:text-white hover:bg-text-main rounded-lg transition-colors"
+                        className="p-2 text-text-muted hover:text-brand-blue hover:bg-white rounded-lg transition-colors"
                         title="Edit category"
                       >
                         <Edit2 className="w-4 h-4" />

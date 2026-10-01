@@ -99,11 +99,11 @@ export default function AdminOrdersPage() {
     <div className="p-4 md:p-6 space-y-6 animate-fade-in max-w-7xl">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-display font-semibold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-display font-semibold text-brand-blue flex items-center gap-2">
             <Package className="w-6 h-6 text-brand-red" />
             Wholesale Orders
           </h1>
-          <p className="text-text-light text-sm mt-0.5">
+          <p className="text-text-muted text-sm mt-0.5">
             {filtered.length} order{filtered.length !== 1 ? 's' : ''} recorded in database
           </p>
         </div>
@@ -120,7 +120,7 @@ export default function AdminOrdersPage() {
                 'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors',
                 statusFilter === s.value
                   ? 'bg-brand-red/20 text-brand-pink border border-brand-red/40'
-                  : 'text-text-light hover:text-white border border-text-main'
+                  : 'text-text-muted hover:text-brand-blue border border-surface-border'
               )}
             >
               {s.label}
@@ -133,7 +133,7 @@ export default function AdminOrdersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-text-main border border-text-muted text-xs text-white placeholder-text-muted focus:ring-1 focus:ring-brand-red"
+            className="w-full pl-9 pr-4 py-2 rounded-xl bg-white border border-surface-border text-xs text-text-main placeholder-text-muted focus:ring-1 focus:ring-brand-red"
             placeholder="Search by buyer, phone, email, order ID…"
           />
         </div>
@@ -143,17 +143,17 @@ export default function AdminOrdersPage() {
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="skeleton h-24 rounded-xl bg-text-main" />
+            <div key={i} className="skeleton h-24 rounded-xl bg-white" />
           ))}
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && filtered.length === 0 && (
-        <div className="card bg-text-main border-text-main p-16 text-center">
-          <Package className="w-12 h-12 text-text-light mx-auto mb-3" />
-          <p className="text-white font-medium text-base">No orders found</p>
-          <p className="text-text-light text-xs mt-1">
+        <div className="card bg-white border-surface-border p-16 text-center">
+          <Package className="w-12 h-12 text-text-muted mx-auto mb-3" />
+          <p className="text-brand-blue font-medium text-base">No orders found</p>
+          <p className="text-text-muted text-xs mt-1">
             {search ? 'Try clearing your search query' : 'New buyer orders will appear here automatically.'}
           </p>
         </div>
@@ -171,7 +171,7 @@ export default function AdminOrdersPage() {
             return (
               <div
                 key={order.id}
-                className="card bg-text-main border-text-main p-5 hover:border-text-muted transition-all duration-200 shadow-lg"
+                className="card bg-white border-surface-border p-5 hover:border-surface-border transition-all duration-200 shadow-lg"
               >
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   {/* Left: Order Info */}
@@ -182,7 +182,7 @@ export default function AdminOrdersPage() {
 
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono font-bold text-white text-sm">
+                        <span className="font-mono font-bold text-brand-blue text-sm">
                           {formatOrderId(order.id)}
                         </span>
                         <span
@@ -195,8 +195,8 @@ export default function AdminOrdersPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-text-light flex-wrap">
-                        <span className="text-white font-medium">
+                      <div className="flex items-center gap-3 text-xs text-text-muted flex-wrap">
+                        <span className="text-brand-blue font-medium">
                           {order.profiles?.full_name || 'Valued Customer'}
                         </span>
                         <span>·</span>
@@ -230,7 +230,7 @@ export default function AdminOrdersPage() {
                           status: e.target.value as OrderFulfilmentStatus,
                         })
                       }
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-text-main border border-text-muted text-white focus:ring-1 focus:ring-brand-red"
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-surface-border text-brand-blue focus:ring-1 focus:ring-brand-red"
                     >
                       <option value="requested">New / Requested</option>
                       <option value="under_review">Under Review</option>
@@ -242,7 +242,7 @@ export default function AdminOrdersPage() {
 
                     <button
                       onClick={() => setSelectedOrder(order)}
-                      className="btn-outline btn-sm flex items-center gap-1.5 text-xs text-white"
+                      className="btn-outline btn-sm flex items-center gap-1.5 text-xs text-brand-blue"
                     >
                       <Eye className="w-3.5 h-3.5" /> View Details
                     </button>
@@ -261,11 +261,11 @@ export default function AdminOrdersPage() {
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setSelectedOrder(null)}
           />
-          <div className="relative w-full max-w-2xl bg-text-main rounded-2xl border border-text-main max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden">
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl border border-surface-border max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="p-5 border-b border-text-main flex items-center justify-between">
+            <div className="p-5 border-b border-surface-border flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <h2 className="text-base font-bold text-brand-blue flex items-center gap-2">
                   <span>Order {formatOrderId(selectedOrder.id)}</span>
                   <span
                     className={cn(
@@ -276,13 +276,13 @@ export default function AdminOrdersPage() {
                     {selectedOrder.fulfilment_status?.replace(/_/g, ' ')}
                   </span>
                 </h2>
-                <p className="text-xs text-text-light mt-0.5">
+                <p className="text-xs text-text-muted mt-0.5">
                   Placed on {formatDate(selectedOrder.created_at)}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="text-text-light hover:text-white p-1"
+                className="text-text-muted hover:text-brand-blue p-1"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -292,11 +292,11 @@ export default function AdminOrdersPage() {
             <div className="p-6 space-y-6 overflow-y-auto flex-1 text-xs">
               {/* Customer Profile & Delivery Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-text-main/50 border border-text-main space-y-2">
-                  <p className="font-semibold text-white flex items-center gap-1.5">
+                <div className="p-4 rounded-xl bg-surface-bg border border-surface-border space-y-2">
+                  <p className="font-semibold text-brand-blue flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-brand-pink" /> Buyer Information
                   </p>
-                  <p className="text-text-light font-medium">
+                  <p className="text-text-muted font-medium">
                     {selectedOrder.profiles?.full_name || 'Customer'}
                   </p>
                   <p className="text-text-muted">{selectedOrder.profiles?.email}</p>
@@ -307,11 +307,11 @@ export default function AdminOrdersPage() {
                   )}
                 </div>
 
-                <div className="p-4 rounded-xl bg-text-main/50 border border-text-main space-y-2">
-                  <p className="font-semibold text-white flex items-center gap-1.5">
+                <div className="p-4 rounded-xl bg-surface-bg border border-surface-border space-y-2">
+                  <p className="font-semibold text-brand-blue flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-emerald-400" /> Delivery Details
                   </p>
-                  <p className="text-text-light">
+                  <p className="text-text-muted">
                     {selectedOrder.shipping_address_snapshot?.recipient_name ||
                       selectedOrder.billing_address_snapshot?.recipient_name ||
                       selectedOrder.profiles?.full_name}
@@ -340,18 +340,18 @@ export default function AdminOrdersPage() {
 
               {/* Order Items Table with Captured Price */}
               <div className="space-y-3">
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-brand-blue">
                   Order Items ({selectedOrder.items?.length || 0})
                 </p>
 
-                <div className="divide-y divide-text-main/70 border border-text-main rounded-xl overflow-hidden bg-text-main/40">
+                <div className="divide-y divide-text-main/70 border border-surface-border rounded-xl overflow-hidden bg-surface-bg/50">
                   {selectedOrder.items?.map((item: any) => (
                     <div
                       key={item.id}
                       className="p-3.5 flex items-center justify-between gap-3"
                     >
                       <div>
-                        <p className="font-semibold text-white text-sm">
+                        <p className="font-semibold text-brand-blue text-sm">
                           {item.product_name_snapshot}
                         </p>
                         <p className="text-text-muted text-[11px] mt-0.5">
@@ -360,7 +360,7 @@ export default function AdminOrdersPage() {
                       </div>
 
                       <div className="text-right">
-                        <p className="text-xs text-text-light">
+                        <p className="text-xs text-text-muted">
                           {formatINR(item.unit_price_paise)} each
                         </p>
                         <p className="text-sm font-bold text-brand-pink">
@@ -375,7 +375,7 @@ export default function AdminOrdersPage() {
               {/* Totals Summary */}
               <div className="p-4 rounded-xl bg-brand-red/10 border border-brand-red/30 flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-text-light">Total Confirmed Wholesale Value</span>
+                  <span className="text-xs text-text-muted">Total Confirmed Wholesale Value</span>
                   <p className="text-xs text-text-muted">Historical price captured at checkout</p>
                 </div>
                 <span className="text-xl font-bold text-brand-pink">
@@ -391,8 +391,8 @@ export default function AdminOrdersPage() {
               </div>
 
               {/* Status Update Control in Modal */}
-              <div className="pt-2 border-t border-text-main flex items-center justify-between">
-                <span className="font-medium text-text-light">Update Order Status:</span>
+              <div className="pt-2 border-t border-surface-border flex items-center justify-between">
+                <span className="font-medium text-text-muted">Update Order Status:</span>
                 <div className="flex gap-2">
                   {['under_review', 'processing', 'dispatched', 'delivered'].map((st) => (
                     <button
@@ -403,7 +403,7 @@ export default function AdminOrdersPage() {
                           status: st as OrderFulfilmentStatus,
                         })
                       }
-                      className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-text-main hover:bg-text-muted border border-text-muted text-white capitalize transition-colors"
+                      className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white hover:bg-text-muted border border-surface-border text-brand-blue capitalize transition-colors"
                     >
                       → {st.replace('_', ' ')}
                     </button>

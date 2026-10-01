@@ -11,14 +11,14 @@ import {
   Plus,
   Bell,
   ArrowUpRight,
+  ArrowRight,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { formatINR, formatDate, formatOrderId } from '@/lib/utils'
 import { Link } from 'react-router-dom'
 import type { Product } from '@/lib/types'
 
-const DEFAULT_IMAGE_FALLBACK =
-  'https://images.unsplash.com/photo-1515082161172-2f3b9c8c9735?q=80&w=400&auto=format&fit=crop'
+const DEFAULT_IMAGE_FALLBACK = '/nityamani-logo-rounded.png'
 
 interface DashboardStats {
   total_products: number
@@ -34,31 +34,78 @@ function StatCard({
   icon: Icon,
   label,
   value,
-  color,
+  iconColor,
+  iconBg,
   to,
+  isLoading,
+  isError,
 }: {
   icon: React.ElementType
   label: string
   value: string | number
-  color: string
+  iconColor: string
+  iconBg: string
   to?: string
+  isLoading?: boolean
+  isError?: boolean
 }) {
   const card = (
-    <div className="card p-5 bg-text-main border-text-main hover:border-text-muted transition-all duration-200 shadow-lg group">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
-          <Icon className="w-5 h-5" />
+    <div className="bg-white border border-surface-border rounded-2xl p-5 hover:border-brand-blue/20 transition-all duration-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] group h-full flex flex-col justify-between relative overflow-hidden">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
+          <Icon className={`w-5 h-5 ${iconColor}`} />
         </div>
         {to && (
-          <ArrowUpRight className="w-4 h-4 text-text-light group-hover:text-white transition-colors" />
+          <ArrowUpRight className="w-4 h-4 text-text-muted group-hover:text-brand-pink transition-colors" />
         )}
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-xs text-text-light mt-1 font-medium">{label}</p>
+      <div>
+        {isLoading ? (
+          <div className="h-9 w-16 bg-surface-bg rounded-lg animate-pulse mb-1"></div>
+        ) : isError ? (
+          <p className="text-xl font-bold text-red-500 tracking-tight">Error</p>
+        ) : (
+          <p className="text-3xl font-extrabold text-brand-blue tracking-tight">{value}</p>
+        )}
+        <p className="text-xs font-semibold text-text-muted mt-1 uppercase tracking-wide">{label}</p>
+      </div>
+      {/* Decorative gradient blur */}
+      <div className={`absolute -bottom-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-20 ${iconBg} transition-opacity group-hover:opacity-40 pointer-events-none`}></div>
     </div>
   )
 
-  return to ? <Link to={to}>{card}</Link> : card
+  return to ? <Link to={to} className="block h-full">{card}</Link> : card
+}
+
+function OrderStatusBadge({ status }: { status: string }) {
+  let colorClass = 'bg-gray-100 text-gray-600 border-gray-200'
+  
+  switch(status.toLowerCase()) {
+    case 'requested':
+      colorClass = 'bg-brand-yellow/20 text-yellow-700 border-brand-yellow/30'
+      break
+    case 'confirmed':
+      colorClass = 'bg-blue-100 text-blue-700 border-blue-200'
+      break
+    case 'processing':
+      colorClass = 'bg-purple-100 text-purple-700 border-purple-200'
+      break
+    case 'shipped':
+      colorClass = 'bg-indigo-100 text-indigo-700 border-indigo-200'
+      break
+    case 'delivered':
+      colorClass = 'bg-green-100 text-green-700 border-green-200'
+      break
+    case 'cancelled':
+      colorClass = 'bg-red-100 text-red-700 border-red-200'
+      break
+  }
+
+  return (
+    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${colorClass}`}>
+      {status.replace(/_/g, ' ')}
+    </span>
+  )
 }
 
 export default function AdminDashboard() {
@@ -131,234 +178,249 @@ export default function AdminDashboard() {
   })
 
   return (
-    <div className="p-4 md:p-6 space-y-6 animate-fade-in max-w-7xl">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-6 animate-fade-in">
+      {/* Header Actions */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-semibold text-white">Admin Dashboard</h1>
-          <p className="text-text-light text-sm mt-0.5">
-            Real-time wholesale operations, orders, and catalogue intelligence
-          </p>
+          <h2 className="text-xl font-extrabold text-brand-blue">Business Overview</h2>
+          <p className="text-sm text-text-muted mt-1">Monitor wholesale activity and catalogue performance</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link to="/admin/products" className="btn-primary btn-sm flex items-center gap-1.5">
-            <Plus className="w-4 h-4" /> Add Product
+        <div className="flex items-center gap-3">
+          <Link to="/admin/notifications" className="px-4 py-2 bg-white border border-surface-border hover:bg-surface-bg hover:border-brand-blue/20 text-brand-blue text-sm font-bold rounded-xl shadow-sm transition-all flex items-center gap-2">
+            <Bell className="w-4 h-4" />
+            <span className="hidden sm:inline">Broadcast Notice</span>
           </Link>
-          <Link to="/admin/notifications" className="btn-outline btn-sm flex items-center gap-1.5 text-xs text-white">
-            <Bell className="w-3.5 h-3.5" /> Broadcast Notice
+          <Link to="/admin/products" className="px-4 py-2 bg-brand-pink hover:bg-brand-red text-white text-sm font-bold rounded-xl shadow-md transition-all flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            <span>Add Product</span>
           </Link>
         </div>
-      </div>
-
-      {/* Stats Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={Package}
-          label="Total Products"
-          value={statsLoading ? '…' : stats?.total_products ?? 0}
-          color="bg-brand-red/20 text-brand-pink"
-          to="/admin/products"
-        />
-        <StatCard
-          icon={FolderOpen}
-          label="Active Categories"
-          value={statsLoading ? '…' : stats?.total_categories ?? 0}
-          color="bg-blue-500/20 text-blue-400"
-          to="/admin/categories"
-        />
-        <StatCard
-          icon={ClipboardList}
-          label="Total Wholesale Orders"
-          value={statsLoading ? '…' : stats?.total_orders ?? 0}
-          color="bg-emerald-500/20 text-emerald-400"
-          to="/admin/orders"
-        />
-        <StatCard
-          icon={Users}
-          label="Buyer Accounts"
-          value={statsLoading ? '…' : stats?.total_customers ?? 0}
-          color="bg-purple-500/20 text-purple-400"
-          to="/admin/customers"
-        />
       </div>
 
       {/* Alerts Row */}
       {((stats?.new_orders ?? 0) > 0 || (stats?.low_stock_products ?? 0) > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(stats?.new_orders ?? 0) > 0 && (
             <Link
               to="/admin/orders"
-              className="flex items-center justify-between p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:border-amber-400/50 transition-colors"
+              className="flex items-center justify-between p-4 rounded-2xl bg-brand-yellow/20 border border-brand-yellow/40 hover:bg-brand-yellow/30 transition-colors shadow-sm group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-brand-yellow/40 text-yellow-800 flex items-center justify-center">
                   <ClipboardList className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="font-semibold text-amber-300 text-sm">
+                  <p className="font-bold text-yellow-900 text-sm">
                     {stats?.new_orders} New Order Request{stats?.new_orders !== 1 ? 's' : ''}
                   </p>
-                  <p className="text-amber-400/70 text-xs">Awaiting quotation and dispatch confirmation</p>
+                  <p className="text-yellow-800/80 text-xs font-medium">Awaiting quotation and dispatch confirmation</p>
                 </div>
               </div>
-              <ArrowUpRight className="w-5 h-5 text-amber-400" />
+              <ArrowRight className="w-5 h-5 text-yellow-800 group-hover:translate-x-1 transition-transform" />
             </Link>
           )}
 
           {(stats?.low_stock_products ?? 0) > 0 && (
             <Link
               to="/admin/products"
-              className="flex items-center justify-between p-4 rounded-2xl bg-red-500/10 border border-red-500/30 hover:border-red-400/50 transition-colors"
+              className="flex items-center justify-between p-4 rounded-2xl bg-red-50 border border-red-100 hover:bg-red-100 transition-colors shadow-sm group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="font-semibold text-red-300 text-sm">
+                  <p className="font-bold text-red-900 text-sm">
                     {stats?.low_stock_products} Low Stock Item{stats?.low_stock_products !== 1 ? 's' : ''}
                   </p>
-                  <p className="text-red-400/70 text-xs">Inventory available below reorder threshold</p>
+                  <p className="text-red-700/80 text-xs font-medium">Inventory available below reorder threshold</p>
                 </div>
               </div>
-              <ArrowUpRight className="w-5 h-5 text-red-400" />
+              <ArrowRight className="w-5 h-5 text-red-600 group-hover:translate-x-1 transition-transform" />
             </Link>
           )}
         </div>
       )}
 
+      {/* Stats Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <StatCard
+          icon={Package}
+          label="Total Products"
+          value={stats?.total_products ?? 0}
+          isLoading={statsLoading}
+          iconColor="text-brand-pink"
+          iconBg="bg-brand-pink/10"
+          to="/admin/products"
+        />
+        <StatCard
+          icon={FolderOpen}
+          label="Active Categories"
+          value={stats?.total_categories ?? 0}
+          isLoading={statsLoading}
+          iconColor="text-blue-600"
+          iconBg="bg-blue-50"
+          to="/admin/categories"
+        />
+        <StatCard
+          icon={ClipboardList}
+          label="Wholesale Orders"
+          value={stats?.total_orders ?? 0}
+          isLoading={statsLoading}
+          iconColor="text-emerald-600"
+          iconBg="bg-emerald-50"
+          to="/admin/orders"
+        />
+        <StatCard
+          icon={Users}
+          label="Customers"
+          value={stats?.total_customers ?? 0}
+          isLoading={statsLoading}
+          iconColor="text-indigo-600"
+          iconBg="bg-indigo-50"
+          to="/admin/customers"
+        />
+      </div>
+
       {/* Two columns: Recent Orders & Recently Added Products */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Recent Orders */}
-        <div className="card bg-text-main border-text-main p-5 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-text-main pb-3">
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
-              <ClipboardList className="w-4 h-4 text-emerald-400" />
-              Recent Wholesale Orders
-            </h2>
-            <Link to="/admin/orders" className="text-xs text-brand-pink hover:underline">
-              View all
+        <div className="bg-white border border-surface-border rounded-2xl shadow-sm overflow-hidden flex flex-col">
+          <div className="p-5 border-b border-surface-border flex items-center justify-between bg-white">
+            <h3 className="text-base font-extrabold text-brand-blue flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-emerald-500" />
+              Recent Orders
+            </h3>
+            <Link to="/admin/orders" className="text-xs font-bold text-brand-pink hover:text-brand-red flex items-center gap-1 transition-colors">
+              View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {ordersLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="skeleton h-16 rounded-xl bg-text-main" />
-              ))}
-            </div>
-          ) : recentOrders.length === 0 ? (
-            <div className="text-center py-8 text-text-light text-xs">No orders recorded yet</div>
-          ) : (
-            <div className="divide-y divide-text-main/70">
-              {recentOrders.map((order: any) => (
-                <div
-                  key={order.id}
-                  className="py-3 flex items-center justify-between gap-3 hover:bg-text-main/40 transition-colors px-2 rounded-lg"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-white">
-                        {formatOrderId(order.id)}
-                      </span>
-                      <span className="badge badge-brand-yellow text-[9px] uppercase">
-                        {order.fulfilment_status?.replace(/_/g, ' ')}
-                      </span>
+          <div className="flex-1 bg-white p-2">
+            {ordersLoading ? (
+              <div className="p-4 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse h-12 rounded-lg bg-surface-bg" />
+                ))}
+              </div>
+            ) : recentOrders.length === 0 ? (
+              <div className="text-center py-12 text-text-muted text-sm font-medium">No wholesale orders recorded yet.</div>
+            ) : (
+              <div className="divide-y divide-surface-border/50">
+                {recentOrders.map((order: any) => (
+                  <div key={order.id} className="p-3 flex items-center justify-between hover:bg-surface-bg rounded-xl transition-colors group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-surface-border flex flex-col items-center justify-center">
+                        <span className="text-[10px] font-bold text-text-muted">ORD</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <span className="font-mono text-sm font-bold text-brand-blue">
+                            {formatOrderId(order.id)}
+                          </span>
+                          <OrderStatusBadge status={order.fulfilment_status} />
+                        </div>
+                        <p className="text-xs font-semibold text-text-muted mt-0.5">
+                          {order.profiles?.full_name || 'Buyer'} · {formatDate(order.created_at)}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs text-text-light mt-0.5">
-                      {order.profiles?.full_name || 'Buyer'} · {formatDate(order.created_at)}
-                    </p>
+                    
+                    <div className="text-right flex items-center gap-4">
+                      {order.confirmed_total_paise ? (
+                        <p className="text-sm font-bold text-brand-blue">
+                          {formatINR(order.confirmed_total_paise)}
+                        </p>
+                      ) : (
+                        <p className="text-xs font-semibold text-text-muted">Pending quote</p>
+                      )}
+                      
+                      <Link
+                        to={`/admin/orders/${order.id}`}
+                        className="px-3 py-1.5 bg-white border border-surface-border rounded-lg text-xs font-bold text-brand-blue hover:border-brand-blue/30 hover:bg-surface-bg transition-colors shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      >
+                        Manage
+                      </Link>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    {order.confirmed_total_paise && (
-                      <p className="text-xs font-bold text-brand-pink">
-                        {formatINR(order.confirmed_total_paise)}
-                      </p>
-                    )}
-                    <Link
-                      to="/admin/orders"
-                      className="text-[11px] text-text-light hover:text-white flex items-center justify-end gap-1 mt-0.5"
-                    >
-                      Manage <ExternalLink className="w-3 h-3" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Recently Added Products */}
-        <div className="card bg-text-main border-text-main p-5 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-text-main pb-3">
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
-              <Package className="w-4 h-4 text-brand-pink" />
-              Recently Added Products
-            </h2>
-            <Link to="/admin/products" className="text-xs text-brand-pink hover:underline">
-              View catalogue
+        <div className="bg-white border border-surface-border rounded-2xl shadow-sm overflow-hidden flex flex-col">
+          <div className="p-5 border-b border-surface-border flex items-center justify-between bg-white">
+            <h3 className="text-base font-extrabold text-brand-blue flex items-center gap-2">
+              <Package className="w-5 h-5 text-brand-pink" />
+              Recent Products
+            </h3>
+            <Link to="/admin/products" className="text-xs font-bold text-brand-pink hover:text-brand-red flex items-center gap-1 transition-colors">
+              View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {productsLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="skeleton h-16 rounded-xl bg-text-main" />
-              ))}
-            </div>
-          ) : recentProducts.length === 0 ? (
-            <div className="text-center py-8 text-text-light text-xs">No products added yet</div>
-          ) : (
-            <div className="divide-y divide-text-main/70">
-              {recentProducts.map((p) => {
-                const img =
-                  p.images?.find((i: any) => i.is_primary)?.url ||
-                  p.images?.[0]?.url ||
-                  DEFAULT_IMAGE_FALLBACK
-
-                return (
-                  <div
-                    key={p.id}
-                    className="py-3 flex items-center justify-between gap-3 hover:bg-text-main/40 transition-colors px-2 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-black/40 border border-text-main flex-shrink-0">
-                        <img
-                          src={img}
-                          alt={p.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = DEFAULT_IMAGE_FALLBACK
-                          }}
-                        />
+          <div className="flex-1 bg-white p-2">
+            {productsLoading ? (
+              <div className="p-4 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse h-12 rounded-lg bg-surface-bg" />
+                ))}
+              </div>
+            ) : recentProducts.length === 0 ? (
+              <div className="text-center py-12 text-text-muted text-sm font-medium">No products in catalogue yet.</div>
+            ) : (
+              <div className="divide-y divide-surface-border/50">
+                {recentProducts.map((p) => {
+                  const img = p.images?.find((i: any) => i.is_primary)?.url || p.images?.[0]?.url || DEFAULT_IMAGE_FALLBACK
+                  
+                  return (
+                    <div key={p.id} className="p-3 flex items-center justify-between hover:bg-surface-bg rounded-xl transition-colors group">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg border border-surface-border bg-white flex-shrink-0 overflow-hidden shadow-sm p-0.5">
+                          <img
+                            src={img}
+                            alt={p.name}
+                            className="w-full h-full object-contain rounded-md bg-white"
+                            onError={(e) => { e.currentTarget.src = DEFAULT_IMAGE_FALLBACK }}
+                          />
+                        </div>
+                        <div className="min-w-0 pr-4">
+                          <p className="text-sm font-bold text-brand-blue truncate" title={p.name}>
+                            {p.name}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[11px] font-mono font-semibold text-text-muted bg-surface-border px-1.5 py-0.5 rounded">{p.sku}</span>
+                            <span className="text-[11px] font-bold text-text-light">•</span>
+                            <span className="text-[11px] font-bold text-brand-pink">{formatINR(p.price_paise)} <span className="text-text-muted">/ {p.selling_unit}</span></span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-white truncate max-w-[180px]">
-                          {p.name}
-                        </p>
-                        <p className="text-[11px] text-text-muted">
-                          {p.sku} · {formatINR(p.price_paise)} / {p.selling_unit}
-                        </p>
+
+                      <div className="text-right flex items-center gap-4 flex-shrink-0">
+                        <div className="hidden sm:block text-right">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${p.is_published ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                            {p.is_published ? 'Published' : 'Draft'}
+                          </span>
+                          <p className="text-[11px] font-semibold text-text-muted mt-1">
+                            {p.available} in stock
+                          </p>
+                        </div>
+                        
+                        <Link
+                          to={`/admin/products/edit/${p.id}`}
+                          className="px-3 py-1.5 bg-white border border-surface-border rounded-lg text-xs font-bold text-brand-blue hover:border-brand-blue/30 hover:bg-surface-bg transition-colors shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        >
+                          Edit
+                        </Link>
                       </div>
                     </div>
-
-                    <div className="text-right flex-shrink-0">
-                      <span
-                        className={`badge text-[9px] font-semibold ${
-                          p.is_published ? 'badge-green' : 'badge-gray'
-                        }`}
-                      >
-                        {p.is_published ? 'Published' : 'Draft'}
-                      </span>
-                      <p className="text-[10px] text-text-light mt-0.5">
-                        {p.available} in stock
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -59,15 +59,15 @@ export default function AdminPaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-bold text-white">Payment Verification</h1>
-        <p className="text-sm text-text-light">
+        <h1 className="text-2xl font-display font-bold text-brand-blue">Payment Verification</h1>
+        <p className="text-sm text-text-muted">
           Verify NEFT, RTGS & UPI manual payment proofs against wholesale invoices
         </p>
       </div>
 
       {/* Orders awaiting verification */}
-      <div className="bg-text-main border border-text-main rounded-2xl p-5 shadow-xl">
-        <h2 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+      <div className="bg-white border border-surface-border rounded-2xl p-5 shadow-xl">
+        <h2 className="text-base font-semibold text-brand-blue mb-3 flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand-red" /> Awaiting Payment Confirmation ({unpaidOrders.length})
         </h2>
 
@@ -91,10 +91,10 @@ export default function AdminPaymentsPage() {
                       {order.payment_status.replace('_', ' ')}
                     </span>
                   </div>
-                  <p className="text-sm font-semibold text-white mt-1">
+                  <p className="text-sm font-semibold text-brand-blue mt-1">
                     {order.customer?.full_name || 'Buyer'}
                   </p>
-                  <p className="text-xs text-text-light">
+                  <p className="text-xs text-text-muted">
                     Payable: {formatINR(order.confirmed_total_paise || order.outstanding_paise)}
                   </p>
                 </div>
@@ -115,9 +115,9 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* Payment log */}
-      <div className="bg-text-main border border-text-main rounded-2xl overflow-hidden shadow-xl">
-        <div className="px-6 py-4 border-b border-text-main flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+      <div className="bg-white border border-surface-border rounded-2xl overflow-hidden shadow-xl">
+        <div className="px-6 py-4 border-b border-surface-border flex items-center justify-between">
+          <h2 className="text-base font-semibold text-brand-blue flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-brand-red" /> Payment Proof Log
           </h2>
           <span className="text-xs text-text-muted">{payments.length} transactions</span>
@@ -130,7 +130,7 @@ export default function AdminPaymentsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-text-main/60 border-b border-text-main text-text-light text-xs uppercase">
+              <thead className="bg-surface-bg border-b border-surface-border text-text-muted text-xs uppercase">
                 <tr>
                   <th className="px-6 py-3">Order ID</th>
                   <th className="px-6 py-3">Method</th>
@@ -140,17 +140,17 @@ export default function AdminPaymentsPage() {
                   <th className="px-6 py-3">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-text-main text-text-light">
+              <tbody className="divide-y divide-text-main text-text-muted">
                 {payments.map(p => (
-                  <tr key={p.id} className="hover:bg-text-main/40 transition-colors">
+                  <tr key={p.id} className="hover:bg-surface-bg/50 transition-colors">
                     <td className="px-6 py-3.5 font-mono text-xs text-brand-pink">
                       #{p.order_id.slice(0, 8)}
                     </td>
                     <td className="px-6 py-3.5 text-xs capitalize">{p.payment_method}</td>
-                    <td className="px-6 py-3.5 font-mono text-xs text-text-light">
+                    <td className="px-6 py-3.5 font-mono text-xs text-text-muted">
                       {p.reference_number || 'N/A'}
                     </td>
-                    <td className="px-6 py-3.5 text-sm font-bold text-white">
+                    <td className="px-6 py-3.5 text-sm font-bold text-brand-blue">
                       {formatINR(p.amount_paise)}
                     </td>
                     <td className="px-6 py-3.5">

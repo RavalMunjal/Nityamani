@@ -34,6 +34,7 @@ export default function AdminCustomersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-customers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
       toast.success('Customer status updated')
     },
     onError: (err: Error) => toast.error(err.message),
@@ -43,8 +44,8 @@ export default function AdminCustomersPage() {
     <div className="p-4 md:p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-semibold text-white">Customers</h1>
-          <p className="text-text-light text-sm mt-0.5">{customers.length} result{customers.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-display font-semibold text-brand-blue">Customers</h1>
+          <p className="text-text-muted text-sm mt-0.5">{customers.length} result{customers.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
@@ -55,7 +56,7 @@ export default function AdminCustomersPage() {
             className={cn('px-3 py-1.5 rounded-lg text-sm font-medium capitalize whitespace-nowrap transition-colors',
               statusFilter === s
                 ? 'bg-brand-red/20 text-brand-pink border border-brand-red/30'
-                : 'text-text-light hover:text-white border border-text-main')}>
+                : 'text-text-muted hover:text-brand-blue border border-surface-border')}>
             {s}
           </button>
         ))}
@@ -63,19 +64,19 @@ export default function AdminCustomersPage() {
 
       {isLoading && (
         <div className="space-y-3">
-          {[1, 2].map(i => <div key={i} className="skeleton h-28 rounded-xl bg-text-main" />)}
+          {[1, 2].map(i => <div key={i} className="skeleton h-28 rounded-xl bg-white" />)}
         </div>
       )}
 
       {!isLoading && customers.length === 0 && (
-        <div className="text-center py-20 text-text-light">No customers found</div>
+        <div className="text-center py-20 text-text-muted">No customers found</div>
       )}
 
       <div className="space-y-3">
         {customers.map((customer: any) => {
           const biz = customer.business_profiles?.[0]
           return (
-            <div key={customer.id} className="card bg-text-main border-text-main p-4">
+            <div key={customer.id} className="card bg-white border-surface-border p-4">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-brand-red/20 flex items-center justify-center flex-shrink-0">
@@ -84,17 +85,17 @@ export default function AdminCustomersPage() {
                     </span>
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">{customer.full_name}</p>
+                    <p className="font-semibold text-brand-blue text-sm">{customer.full_name}</p>
                     {biz && <p className="text-xs text-brand-pink font-medium">{biz.business_name}</p>}
                     <div className="flex flex-wrap gap-3 mt-1.5">
-                      <span className="flex items-center gap-1 text-xs text-text-light">
+                      <span className="flex items-center gap-1 text-xs text-text-muted">
                         <Mail className="w-3 h-3" />{customer.email}
                       </span>
-                      <span className="flex items-center gap-1 text-xs text-text-light">
+                      <span className="flex items-center gap-1 text-xs text-text-muted">
                         <Phone className="w-3 h-3" />{customer.phone}
                       </span>
                       {biz && (
-                        <span className="flex items-center gap-1 text-xs text-text-light">
+                        <span className="flex items-center gap-1 text-xs text-text-muted">
                           <MapPin className="w-3 h-3" />{biz.city}, {biz.state}
                         </span>
                       )}

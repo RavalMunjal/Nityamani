@@ -77,19 +77,19 @@ export default function AdminNotificationsPage() {
   return (
     <div className="p-4 md:p-6 space-y-6 animate-fade-in max-w-5xl">
       <div>
-        <h1 className="text-2xl font-display font-semibold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-display font-semibold text-brand-blue flex items-center gap-2">
           <Bell className="w-6 h-6 text-brand-red" />
           Customer Notifications & Broadcasts
         </h1>
-        <p className="text-text-light text-sm mt-0.5">
+        <p className="text-text-muted text-sm mt-0.5">
           Push new product arrivals, rate revisions, stock alerts and wholesale notices to all buyer accounts
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Broadcast Form */}
-        <div className="lg:col-span-3 card bg-text-main border-text-main p-5 space-y-4">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-text-main pb-3">
+        <div className="lg:col-span-3 card bg-white border-surface-border p-5 space-y-4">
+          <h2 className="text-base font-semibold text-brand-blue flex items-center gap-2 border-b border-surface-border pb-3">
             <Megaphone className="w-4 h-4 text-brand-pink" />
             Send New Broadcast Notification
           </h2>
@@ -103,7 +103,7 @@ export default function AdminNotificationsPage() {
           >
             {/* Notification Type */}
             <div>
-              <label className="block text-xs font-medium text-text-light mb-1.5">Announcement Type</label>
+              <label className="block text-xs font-medium text-text-muted mb-1.5">Announcement Type</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { value: 'product', label: 'New Arrival', icon: Package },
@@ -118,7 +118,7 @@ export default function AdminNotificationsPage() {
                     className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
                       type === item.value
                         ? 'bg-brand-red/20 text-brand-pink border-brand-red'
-                        : 'bg-text-main text-text-light border-text-muted hover:border-text-light'
+                        : 'bg-white text-text-muted border-surface-border hover:border-text-light'
                     }`}
                   >
                     <item.icon className="w-3.5 h-3.5" />
@@ -130,37 +130,37 @@ export default function AdminNotificationsPage() {
 
             {/* Title */}
             <div>
-              <label className="block text-xs font-medium text-text-light mb-1">Notification Title *</label>
+              <label className="block text-xs font-medium text-text-muted mb-1">Notification Title *</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. New Arrival: 7 Mukhi Nepali Rudraksha Mala"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-brand-red"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-text-main placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-brand-red"
               />
             </div>
 
             {/* Message */}
             <div>
-              <label className="block text-xs font-medium text-text-light mb-1">Message Description *</label>
+              <label className="block text-xs font-medium text-text-muted mb-1">Message Description *</label>
               <textarea
                 rows={3}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Fresh stock of natural certified Nepali beads just arrived. Minimum order starts at 10 pcs."
-                className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-brand-red"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-text-main placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-brand-red"
               />
             </div>
 
             {/* Product Link (Optional) */}
             <div>
-              <label className="block text-xs font-medium text-text-light mb-1">
+              <label className="block text-xs font-medium text-text-muted mb-1">
                 Attach Catalogue Product (Optional)
               </label>
               <select
                 value={selectedProductId}
                 onChange={(e) => setSelectedProductId(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-text-muted bg-text-main text-white focus:outline-none focus:ring-1 focus:ring-brand-red"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-surface-border bg-white text-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-red"
               >
                 <option value="">No product link (directs to home)</option>
                 {products.map((p) => (
@@ -197,8 +197,8 @@ export default function AdminNotificationsPage() {
 
         {/* Recent Broadcasts List */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="card bg-text-main border-text-main p-5">
-            <h2 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+          <div className="card bg-white border-surface-border p-5">
+            <h2 className="text-base font-semibold text-brand-blue mb-3 flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-emerald-400" />
               Recent Announcements
             </h2>
@@ -206,7 +206,7 @@ export default function AdminNotificationsPage() {
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="skeleton h-16 rounded-xl bg-text-main" />
+                  <div key={i} className="skeleton h-16 rounded-xl bg-white" />
                 ))}
               </div>
             ) : recentNotifications.length === 0 ? (
@@ -214,12 +214,12 @@ export default function AdminNotificationsPage() {
             ) : (
               <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
                 {recentNotifications.map((notif: any) => (
-                  <div key={notif.id} className="p-3 rounded-xl bg-text-main/50 border border-text-main/80 space-y-1">
+                  <div key={notif.id} className="p-3 rounded-xl bg-surface-bg border border-surface-border/80 space-y-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-white line-clamp-1">{notif.title}</span>
+                      <span className="text-xs font-semibold text-brand-blue line-clamp-1">{notif.title}</span>
                       <span className="badge badge-brand-yellow text-[9px] uppercase">{notif.type}</span>
                     </div>
-                    <p className="text-xs text-text-light line-clamp-2">{notif.message}</p>
+                    <p className="text-xs text-text-muted line-clamp-2">{notif.message}</p>
                     <p className="text-[10px] text-text-muted pt-1">
                       Sent {formatDate(notif.created_at)}
                     </p>
