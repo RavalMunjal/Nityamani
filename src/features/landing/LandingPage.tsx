@@ -359,7 +359,7 @@ export default function LandingPage() {
             <Link to="/app" className="hover:text-brand-red transition-colors">Catalog</Link>
             <Link to="/auth?mode=login" className="hover:text-brand-red transition-colors">Wholesale Login</Link>
             <Link to="/auth?mode=register" className="hover:text-brand-red transition-colors">Register Firm</Link>
-            <Link to="/admin" className="hover:text-brand-blue font-semibold transition-colors">Admin Portal</Link>
+            <a href="/admin/login" className="hover:text-brand-blue font-semibold transition-colors">Admin Portal</a>
           </div>
 
           <div className="text-xs text-text-muted">

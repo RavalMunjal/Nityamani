@@ -210,7 +210,7 @@ BEGIN
     new.email,
     COALESCE(new.raw_user_meta_data->>'full_name', 'Valued Customer'),
     COALESCE(new.raw_user_meta_data->>'phone', ''),
-    CASE WHEN new.email ILIKE '%admin%' THEN 'admin' ELSE 'customer' END,
+    'customer',
     'active'
   )
   ON CONFLICT (id) DO UPDATE SET status = 'active';
@@ -222,6 +222,26 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ==============================================================================
+-- PREVENT ROLE SELF-ASSIGNMENT
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.protect_role_update()
+RETURNS trigger AS $$
+BEGIN
+  IF NEW.role IS DISTINCT FROM OLD.role THEN
+    IF NOT public.is_admin() THEN
+      RAISE EXCEPTION 'Not authorized to change role';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS prevent_role_change ON public.profiles;
+CREATE TRIGGER prevent_role_change
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.protect_role_update();
 
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
@@ -241,12 +261,11 @@ ALTER TABLE quotations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
--- Helper to check if current user is admin
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND (role = 'admin' OR email ILIKE '%admin%')
+    WHERE id = auth.uid() AND role = 'admin'
   );
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 

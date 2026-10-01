@@ -159,11 +159,11 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         {/* Mobile slide-down menu */}
         {menuOpen && (
           <div className="bg-white border-b border-surface-border px-4 py-3 space-y-1 animate-slide-up">
-            <NavLink to="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-red transition-colors"
+            <a href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-red transition-colors"
               onClick={() => setMenuOpen(false)}>
               <ShieldCheck className="w-4 h-4 text-brand-yellow" />
               <span className="text-sm">Admin Dashboard</span>
-            </NavLink>
+            </a>
             <NavLink to="/app/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-bg"
               onClick={() => setMenuOpen(false)}>
               <User className="w-4 h-4 text-text-muted" />

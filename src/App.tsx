@@ -11,6 +11,7 @@ import CartPage from '@/features/customer/CartPage'
 import OrdersPage from '@/features/customer/OrdersPage'
 import OrderDetailPage from '@/features/customer/OrderDetailPage'
 import AdminLayout from '@/features/admin/AdminLayout'
+import AdminLoginPage from '@/features/admin/AdminLoginPage'
 import AdminDashboard from '@/features/admin/AdminDashboard'
 import AdminProductsPage from '@/features/admin/AdminProductsPage'
 import AdminCustomersPage from '@/features/admin/AdminCustomersPage'
@@ -35,27 +36,59 @@ const queryClient = new QueryClient({
   },
 })
 
+import { type ReactNode } from 'react'
+
 // ── Route guards ───────────────────────────────────────────────────────────
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, profile } = useAuth()
-  if (isLoading) return <LoadingScreen />
+function RequireAuth({ children }: { children: ReactNode }) {
+  const { user, isLoading, profile, status } = useAuth()
+  if (isLoading || status === 'AUTHENTICATED_PROFILE_LOADING') return <LoadingScreen />
   if (!user) return <Navigate to="/auth" replace />
-  if (profile?.status === 'blocked') return <BlockedScreen />
+  if (!profile) return <Navigate to="/auth" replace /> // safety net
+  if (profile.status === 'blocked') return <BlockedScreen />
   return <>{children}</>
 }
 
-function RequireAdmin({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, isAdmin } = useAuth()
-  if (isLoading) return <LoadingScreen />
-  if (!user) return <Navigate to="/auth" replace />
-  if (!isAdmin) return <Navigate to="/app" replace />
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const { user, isLoading, isAdmin, status } = useAuth()
+  if (isLoading || status === 'AUTHENTICATED_PROFILE_LOADING') return <LoadingScreen />
+  if (!user) return <Navigate to="/admin/login" replace />
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-2xl font-bold text-brand-red mb-2">Access Denied</h1>
+        <p className="text-text-muted mb-4">This account is not authorized for Admin access.</p>
+        <button className="btn-primary" onClick={() => window.location.href = '/'}>Return Home</button>
+      </div>
+    )
+  }
   return <>{children}</>
 }
 
-function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, isAdmin } = useAuth()
-  if (isLoading) return <LoadingScreen />
-  if (user) return <Navigate to={isAdmin ? "/admin" : "/app"} replace />
+function RedirectIfAuthed({ children }: { children: ReactNode }) {
+  const { user, isLoading, status, isAdmin } = useAuth()
+  if (isLoading || status === 'AUTHENTICATED_PROFILE_LOADING') return <LoadingScreen />
+  if (user) {
+    if (isAdmin) return <Navigate to="/admin" replace />
+    return <Navigate to="/app" replace />
+  }
+  return <>{children}</>
+}
+
+function RedirectIfAuthedAdmin({ children }: { children: ReactNode }) {
+  const { user, isLoading, isAdmin, status } = useAuth()
+  if (isLoading || status === 'AUTHENTICATED_PROFILE_LOADING') return <LoadingScreen />
+  if (user) {
+    if (isAdmin) return <Navigate to="/admin" replace />
+    // If a non-admin tries to log in via admin login, deny them!
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-2xl font-bold text-brand-red mb-2">Access Denied</h1>
+        <p className="text-text-muted mb-4">This account is not authorized for Admin access.</p>
+        <p className="text-sm text-text-light mb-8">Please use the customer login.</p>
+        <button className="btn-primary" onClick={() => window.location.href = '/auth'}>Go to Customer Login</button>
+      </div>
+    )
+  }
   return <>{children}</>
 }
 
@@ -177,6 +210,11 @@ function AppRouter() {
       } />
 
       {/* Admin panel */}
+      <Route path="/admin/login" element={
+        <RedirectIfAuthedAdmin>
+          <AdminLoginPage />
+        </RedirectIfAuthedAdmin>
+      } />
       <Route path="/admin" element={
         <RequireAdmin>
           <AdminLayout>

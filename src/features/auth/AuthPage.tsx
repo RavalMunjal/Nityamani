@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Eye, EyeOff, Loader2, Gem, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/features/auth/AuthContext'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
@@ -38,7 +36,7 @@ const forgotSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>
 type RegisterForm = z.infer<typeof registerSchema>
 type ForgotForm = z.infer<typeof forgotSchema>
-type Mode = 'login' | 'register' | 'admin' | 'forgot'
+type Mode = 'login' | 'register' | 'forgot'
 
 // ── FieldInput helper ───────────────────────────────────────────────────────
 function Field({ label, error, hint, children }: {
@@ -56,24 +54,12 @@ function Field({ label, error, hint, children }: {
 
 // ── Main Auth Page ──────────────────────────────────────────────────────────
 export default function AuthPage() {
-  const navigate = useNavigate()
-  const { refreshProfile } = useAuth()
   const [mode, setMode] = useState<Mode>('login')
   const [showPw, setShowPw] = useState(false)
-  const [showAdminPw, setShowAdminPw] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Login
   const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) })
-
-  // Admin Login
-  const adminForm = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: 'admin@nityamani.com',
-      password: '',
-    },
-  })
 
   // Register
   const regForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) })
@@ -96,71 +82,6 @@ export default function AuthPage() {
       }
     }
     // Redirect happens via AuthProvider / router
-  }
-
-  const handleAdminLogin = async (data: LoginForm) => {
-    setIsSubmitting(true)
-    const email = data.email.trim().toLowerCase()
-    const password = data.password
-
-    try {
-      // 1. Try real Supabase password sign-in
-      const signInRes = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      let activeUser = signInRes.data?.user
-      let authError = signInRes.error
-
-      // 2. If it's the default admin or not registered yet, try auto-provision via signUp
-      if (authError && (authError.message.includes('Invalid login') || authError.message.includes('schema') || authError.message.includes('not found'))) {
-        const signUpRes = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: 'Nityamani Admin',
-              role: 'admin',
-            },
-          },
-        })
-
-        if (!signUpRes.error && signUpRes.data.user) {
-          activeUser = signUpRes.data.user
-          authError = null
-        }
-      }
-
-      if (authError) {
-        if (authError.message.includes('Invalid login')) {
-          toast.error('Incorrect admin email or password')
-        } else {
-          toast.error(authError.message)
-        }
-        return
-      }
-
-      // 3. Guarantee role in profiles is 'admin'
-      if (activeUser?.id) {
-        await supabase.from('profiles').upsert({
-          id: activeUser.id,
-          email,
-          full_name: activeUser.user_metadata?.full_name ?? 'Nityamani Admin',
-          role: 'admin',
-          status: 'active',
-        })
-      }
-
-      await refreshProfile()
-      toast.success('Admin login successful! Entering Admin Panel…')
-      navigate('/admin')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Admin login failed'
-      toast.error(msg)
-    } finally {
-      setIsSubmitting(false)
-    }
   }
 
   const handleGoogleLogin = async (targetPath = '/app') => {
@@ -259,7 +180,6 @@ export default function AuthPage() {
               {[
                 { id: 'login', label: 'Sign In' },
                 { id: 'register', label: 'Register' },
-                { id: 'admin', label: 'Admin', icon: ShieldCheck },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -267,13 +187,10 @@ export default function AuthPage() {
                   className={cn(
                     'flex-1 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5',
                     mode === tab.id
-                      ? tab.id === 'admin'
-                        ? 'bg-brand-blue text-brand-yellow font-bold shadow-sm'
-                        : 'bg-white shadow text-text-main font-semibold'
+                      ? 'bg-white shadow text-text-main font-semibold'
                       : 'text-text-muted hover:text-text-main'
                   )}
                 >
-                  {tab.icon && <tab.icon className="w-3.5 h-3.5" />}
                   {tab.label}
                 </button>
               ))}
@@ -339,77 +256,6 @@ export default function AuthPage() {
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
                 Google
-              </button>
-            </form>
-          )}
-
-          {/* ── ADMIN LOGIN ── */}
-          {mode === 'admin' && (
-            <form onSubmit={adminForm.handleSubmit(handleAdminLogin)} className="space-y-4">
-              <div className="bg-brand-blue/5 border border-brand-blue/15 rounded-xl p-3 mb-1">
-                <div className="flex items-center gap-2 text-brand-blue font-semibold text-sm">
-                  <ShieldCheck className="w-4 h-4 text-brand-red" />
-                  <span>Admin Access Portal</span>
-                </div>
-                <p className="text-xs text-text-muted mt-1">
-                  Enter your admin credentials to manage products, categories, orders & broadcast notifications.
-                </p>
-              </div>
-
-              <Field label="Admin Email" error={adminForm.formState.errors.email?.message}>
-                <input
-                  type="email"
-                  autoComplete="email"
-                  className={cn('field-input', adminForm.formState.errors.email && 'field-input-error')}
-                  placeholder="admin@nityamani.com"
-                  {...adminForm.register('email')}
-                />
-              </Field>
-
-              <Field label="Admin Password" error={adminForm.formState.errors.password?.message}>
-                <div className="relative">
-                  <input
-                    type={showAdminPw ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    className={cn('field-input pr-10', adminForm.formState.errors.password && 'field-input-error')}
-                    placeholder="••••••••"
-                    {...adminForm.register('password')}
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-light hover:text-text-main"
-                    onClick={() => setShowAdminPw(p => !p)}
-                  >
-                    {showAdminPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </Field>
-
-              <div className="flex items-center justify-between text-xs pt-0.5">
-                <span className="text-text-muted">Default admin login:</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    adminForm.setValue('email', 'admin@nityamani.com')
-                    adminForm.setValue('password', 'admin123')
-                  }}
-                  className="text-brand-red font-semibold hover:underline"
-                >
-                  Auto-fill Demo (admin123)
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                className="btn-primary w-full btn-lg bg-brand-blue hover:bg-brand-red text-white flex items-center justify-center gap-2 shadow-md"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <><span className="nm-spinner" /> Signing in to Admin…</>
-                ) : (
-                  <><ShieldCheck className="w-4 h-4 text-brand-yellow" /> Enter Admin Panel</>
-                )}
               </button>
             </form>
           )}
@@ -488,7 +334,7 @@ export default function AuthPage() {
 
               <button
                 type="button"
-                onClick={() => handleGoogleLogin('/admin')}
+                onClick={() => handleGoogleLogin('/app')}
                 className="w-full flex justify-center items-center gap-2 px-4 py-2.5 border border-surface-border rounded-lg text-sm font-medium text-text-main bg-white hover:bg-surface-bg transition-colors shadow-sm"
                 disabled={isSubmitting}
               >

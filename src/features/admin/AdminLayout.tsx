@@ -71,8 +71,8 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       {/* Quick toggle to Customer Store */}
       <div className="px-4 pt-5 pb-3">
-        <NavLink
-          to="/app"
+        <a
+          href="/app"
           onClick={onClose}
           className="flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold text-brand-blue bg-surface-bg border border-surface-border hover:border-brand-blue/20 hover:bg-white transition-all shadow-sm group"
         >
@@ -81,7 +81,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             <span>View Customer Store</span>
           </div>
           <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-brand-blue transition-colors" />
-        </NavLink>
+        </a>
       </div>
 
       {/* Nav */}

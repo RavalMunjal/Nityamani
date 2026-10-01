@@ -12,13 +12,26 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const isAdminApp = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
 
+// ── One-Time Migration: Clean up old shared auth state ─────────────────────
+if (typeof window !== 'undefined') {
+  try {
+    if (window.localStorage.getItem('sb-admin-auth-token') || window.localStorage.getItem('sb-customer-auth-token')) {
+      window.localStorage.removeItem('sb-admin-auth-token')
+      window.localStorage.removeItem('sb-customer-auth-token')
+      console.log('✅ Cleared legacy shared localStorage auth sessions.')
+    }
+  } catch (err) {
+    // ignore
+  }
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storageKey: isAdminApp ? 'sb-admin-auth-token' : 'sb-customer-auth-token',
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: window.localStorage,
+    storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
   },
 })
 
