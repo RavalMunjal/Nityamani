@@ -16,14 +16,13 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { formatINR } from '@/lib/utils'
+import { formatINR, FALLBACK_IMAGE } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { Product } from '@/lib/types'
 import { parseProductDetails } from '@/lib/productDetails'
 import toast from 'react-hot-toast'
 
-const DEFAULT_IMAGE_FALLBACK =
-  'https://images.unsplash.com/photo-1515082161172-2f3b9c8c9735?q=80&w=800&auto=format&fit=crop'
+const DEFAULT_IMAGE_FALLBACK = FALLBACK_IMAGE
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()

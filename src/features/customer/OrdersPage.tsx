@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Package, ChevronRight, Clock } from 'lucide-react'
+import { Package, ChevronRight, Clock, CreditCard } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { formatINR, formatDate, formatOrderId } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { Order, OrderFulfilmentStatus } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { cn, FALLBACK_IMAGE } from '@/lib/utils'
 
 const statusConfig: Record<OrderFulfilmentStatus, { label: string; color: string }> = {
   requested:       { label: 'Requested',      color: 'badge-gray' },
@@ -28,7 +28,7 @@ export default function OrdersPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select('*, items:order_items(id, product_name_snapshot, quantity, unit_price_paise, total_paise)')
+        .select('*, items:order_items(id, product_name_snapshot, quantity, unit_price_paise, total_paise, product:products(images:product_images(url, is_primary))), payment:payments(payment_method, status)')
         .eq('customer_id', user!.id)
         .order('created_at', { ascending: false })
       if (error) throw error
@@ -64,8 +64,20 @@ export default function OrdersPage() {
           return (
             <Link key={order.id} to={`/app/orders/${order.id}`}
               className="card-hover flex gap-4 p-4 items-center">
-              <div className="w-10 h-10 rounded-xl bg-brand-yellow flex items-center justify-center flex-shrink-0">
-                <Package className="w-5 h-5 text-brand-red" />
+              <div className="w-16 h-16 rounded-xl bg-surface-bg flex items-center justify-center flex-shrink-0 border border-surface-border overflow-hidden">
+                {(order as any).items?.[0]?.product?.images?.[0]?.url ? (
+                  <img 
+                    src={(order as any).items[0].product.images.find((i:any)=>i.is_primary)?.url || (order as any).items[0].product.images[0].url} 
+                    alt="Product" 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  <img 
+                    src={FALLBACK_IMAGE} 
+                    alt="Nityamani" 
+                    className="w-full h-full object-cover" 
+                  />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -79,8 +91,15 @@ export default function OrdersPage() {
                   {formatDate(order.created_at)}
                   {order.items?.length > 0 && ` · ${order.items.length} item${order.items.length !== 1 ? 's' : ''}`}
                 </p>
+                {(order as any).payment?.[0] && (
+                  <p className="text-xs font-semibold text-brand-navy mt-1 inline-flex items-center gap-1 bg-brand-yellow/20 px-2 py-0.5 rounded-md">
+                    <CreditCard className="w-3 h-3" /> 
+                    {(order as any).payment[0].payment_method.toUpperCase().replace('_', ' ')}
+                    {(order as any).payment[0].status !== 'pending' && ` (${(order as any).payment[0].status})`}
+                  </p>
+                )}
                 {order.confirmed_total_paise && (
-                  <p className="text-sm font-bold text-brand-red mt-0.5">
+                  <p className="text-sm font-bold text-brand-red mt-1">
                     {formatINR(order.confirmed_total_paise)}
                   </p>
                 )}

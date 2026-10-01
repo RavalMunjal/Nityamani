@@ -12,10 +12,11 @@ import {
   Eye,
   ChevronRight,
   Filter,
+  CreditCard,
 } from 'lucide-react'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { formatDate, formatOrderId, formatINR, cn } from '@/lib/utils'
+import { formatDate, formatOrderId, formatINR, cn, FALLBACK_IMAGE } from '@/lib/utils'
 import type { OrderFulfilmentStatus, Order } from '@/lib/types'
 import toast from 'react-hot-toast'
 
@@ -51,7 +52,7 @@ export default function AdminOrdersPage() {
     queryFn: async () => {
       let q = supabase
         .from('orders')
-        .select('*, profiles(full_name, email, phone), items:order_items(*)')
+        .select('*, profiles(full_name, email, phone), items:order_items(*, product:products(images:product_images(url, is_primary))), payment:payments(payment_method, status)')
         .order('created_at', { ascending: false })
 
       if (statusFilter !== 'all') q = q.eq('fulfilment_status', statusFilter)
@@ -205,10 +206,16 @@ export default function AdminOrdersPage() {
                         <span>{formatDate(order.created_at)}</span>
                       </div>
 
-                      <p className="text-xs text-text-muted">
+                      <p className="text-xs text-text-muted mt-1">
                         {order.items?.length || 0} product item{order.items?.length !== 1 ? 's' : ''}{' '}
                         ordered
                       </p>
+                      {order.payment?.[0] && (
+                        <p className="text-xs font-semibold text-brand-navy mt-1 inline-flex items-center gap-1 bg-brand-yellow/20 px-2 py-0.5 rounded-md">
+                          <CreditCard className="w-3 h-3" /> 
+                          {order.payment[0].payment_method.toUpperCase().replace('_', ' ')}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -336,6 +343,17 @@ export default function AdminOrdersPage() {
                       }`}
                   </p>
                 </div>
+                <div className="p-4 rounded-xl bg-surface-bg border border-surface-border space-y-2">
+                  <p className="font-semibold text-brand-blue flex items-center gap-1.5">
+                    <CreditCard className="w-3.5 h-3.5 text-brand-blue" /> Payment Details
+                  </p>
+                  <p className="text-text-muted capitalize">
+                    Method: {selectedOrder.payment?.[0]?.payment_method?.replace('_', ' ') || 'Unknown'}
+                  </p>
+                  <p className="text-text-muted capitalize">
+                    Status: {selectedOrder.payment?.[0]?.status || selectedOrder.payment_status}
+                  </p>
+                </div>
               </div>
 
               {/* Order Items Table with Captured Price */}
@@ -345,30 +363,45 @@ export default function AdminOrdersPage() {
                 </p>
 
                 <div className="divide-y divide-text-main/70 border border-surface-border rounded-xl overflow-hidden bg-surface-bg/50">
-                  {selectedOrder.items?.map((item: any) => (
-                    <div
-                      key={item.id}
-                      className="p-3.5 flex items-center justify-between gap-3"
-                    >
-                      <div>
-                        <p className="font-semibold text-brand-blue text-sm">
-                          {item.product_name_snapshot}
-                        </p>
-                        <p className="text-text-muted text-[11px] mt-0.5">
-                          SKU: {item.sku_snapshot} · Unit: {item.unit_snapshot} · Qty: {item.quantity}
-                        </p>
-                      </div>
+                  {selectedOrder.items?.map((item: any) => {
+                    const product = item.product || {}
+                    const images = Array.isArray(product.images) ? product.images : []
+                    const primaryImg = images.find((i: any) => i.is_primary) ?? images[0]
 
-                      <div className="text-right">
-                        <p className="text-xs text-text-muted">
-                          {formatINR(item.unit_price_paise)} each
-                        </p>
-                        <p className="text-sm font-bold text-brand-pink">
-                          {formatINR(item.total_paise)}
-                        </p>
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-3.5 flex items-center justify-between gap-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-md bg-white flex-shrink-0 border border-surface-border overflow-hidden">
+                            <img 
+                              src={primaryImg?.url || FALLBACK_IMAGE} 
+                              alt={item.product_name_snapshot} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-brand-blue text-sm line-clamp-1">
+                              {item.product_name_snapshot}
+                            </p>
+                            <p className="text-text-muted text-[11px] mt-0.5">
+                              SKU: {item.sku_snapshot} · Unit: {item.unit_snapshot} · Qty: {item.quantity}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-xs text-text-muted">
+                            {formatINR(item.unit_price_paise)} each
+                          </p>
+                          <p className="text-sm font-bold text-brand-pink">
+                            {formatINR(item.total_paise)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
 

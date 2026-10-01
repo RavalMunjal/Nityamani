@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search, SlidersHorizontal, ArrowUpDown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { formatINR, cn } from '@/lib/utils'
+import { formatINR, cn, FALLBACK_IMAGE } from '@/lib/utils'
 import type { Product, Category } from '@/lib/types'
 
 export default function CustomerProductsPage() {
@@ -68,8 +68,7 @@ export default function CustomerProductsPage() {
     return result
   }, [products, searchTerm, sortBy])
 
-  // Fallback beautiful crystal/bead image for products without an image
-  const defaultProductImage = "https://images.unsplash.com/photo-1515082161172-2f3b9c8c9735?q=80&w=400&auto=format&fit=crop"
+  const defaultProductImage = FALLBACK_IMAGE
 
   return (
     <div className="page-container py-8 animate-fade-in space-y-6 pb-12">

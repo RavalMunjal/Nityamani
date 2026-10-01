@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
-import { Package, ArrowLeft, Clock, MapPin } from 'lucide-react'
+import { Package, ArrowLeft, Clock, MapPin, CreditCard } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { formatINR, formatDate, formatOrderId } from '@/lib/utils'
+import { formatINR, formatDate, formatOrderId, FALLBACK_IMAGE } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { Order } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -17,7 +17,7 @@ export default function OrderDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select('*, items:order_items(*)')
+        .select('*, items:order_items(*, product:products(images:product_images(url, is_primary))), payment:payments(payment_method, status)')
         .eq('id', id!)
         .eq('customer_id', user!.id)
         .single()
@@ -61,22 +61,51 @@ export default function OrderDetailPage() {
         Requested on {formatDate(order.created_at)}
       </p>
 
+      {/* Payment Details */}
+      {(order as any).payment?.[0] && (
+        <div className="card p-5 mb-6 bg-brand-yellow/5 border border-brand-yellow/30">
+          <h2 className="font-semibold text-text-main mb-3 flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-brand-navy" />
+            Payment Method
+          </h2>
+          <p className="text-sm text-brand-navy font-semibold uppercase">
+            {(order as any).payment[0].payment_method.replace('_', ' ')}
+            <span className="ml-2 text-xs font-normal text-text-muted capitalize">
+              ({(order as any).payment[0].status})
+            </span>
+          </p>
+        </div>
+      )}
+
       {/* Items */}
       <div className="card p-5 mb-6">
         <h2 className="font-semibold text-text-main mb-4 border-b border-surface-border pb-2">Order Items</h2>
-        <div className="space-y-4">
-          {order.items?.map(item => (
-            <div key={item.id} className="flex justify-between items-start gap-4">
-              <div>
-                <p className="text-sm font-medium text-text-main">{item.product_name_snapshot}</p>
-                <p className="text-xs text-text-light mt-0.5">SKU: {item.sku_snapshot} · Qty: {item.quantity} {item.unit_snapshot}</p>
+          {order.items?.map((item: any) => {
+            const product = item.product || {}
+            const images = Array.isArray(product.images) ? product.images : []
+            const primaryImg = images.find((i: any) => i.is_primary) ?? images[0]
+
+            return (
+              <div key={item.id} className="flex justify-between items-start gap-4">
+                <div className="flex gap-4 items-center">
+                  <div className="w-14 h-14 rounded-lg bg-surface-bg flex-shrink-0 border border-surface-border overflow-hidden">
+                    <img 
+                      src={primaryImg?.url || FALLBACK_IMAGE} 
+                      alt={item.product_name_snapshot} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-text-main">{item.product_name_snapshot}</p>
+                    <p className="text-xs text-text-light mt-0.5">SKU: {item.sku_snapshot} · Qty: {item.quantity} {item.unit_snapshot}</p>
+                  </div>
+                </div>
+                <p className="text-sm font-bold text-text-main">
+                  {formatINR(item.total_paise)}
+                </p>
               </div>
-              <p className="text-sm font-bold text-text-main">
-                {formatINR(item.total_paise)}
-              </p>
-            </div>
-          ))}
-        </div>
+            )
+          })}
         
         <div className="divider-brand-yellow my-4" />
         
@@ -93,19 +122,12 @@ export default function OrderDetailPage() {
           Delivery Details
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-surface-bg p-3 rounded-lg border border-surface-border">
-            <p className="text-xs text-text-muted mb-1 font-semibold">Billing Address</p>
-            <p className="text-sm text-text-main">
-              {(order.billing_address_snapshot as any)?.business_name}<br/>
-              {(order.billing_address_snapshot as any)?.billing_address || order.billing_address_snapshot?.line1}<br/>
-              {order.billing_address_snapshot?.city}, {order.billing_address_snapshot?.state} - {order.billing_address_snapshot?.pin_code}
-            </p>
-          </div>
-          <div className="bg-surface-bg p-3 rounded-lg border border-surface-border">
-            <p className="text-xs text-text-muted mb-1 font-semibold">Shipping Address</p>
-            <p className="text-sm text-text-main">
-              {(order.shipping_address_snapshot as any)?.business_name}<br/>
-              {(order.shipping_address_snapshot as any)?.billing_address || order.shipping_address_snapshot?.line1}<br/>
+          <div className="bg-surface-bg p-4 rounded-lg border border-surface-border">
+            <p className="text-xs text-brand-blue mb-1 font-semibold uppercase tracking-wide">Delivery Address</p>
+            <p className="text-sm text-text-main leading-relaxed">
+              {(order.shipping_address_snapshot as any)?.recipient_name || (order.billing_address_snapshot as any)?.recipient_name || 'Customer'}<br/>
+              {(order.shipping_address_snapshot as any)?.address_line_1 || (order.shipping_address_snapshot as any)?.billing_address || (order.shipping_address_snapshot as any)?.line1}<br/>
+              {(order.shipping_address_snapshot as any)?.address_line_2 && <>{(order.shipping_address_snapshot as any).address_line_2}<br/></>}
               {order.shipping_address_snapshot?.city}, {order.shipping_address_snapshot?.state} - {order.shipping_address_snapshot?.pin_code}
             </p>
           </div>

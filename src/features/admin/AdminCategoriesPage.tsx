@@ -131,7 +131,7 @@ function CategoryModal({
             <input
               type="url"
               className={INPUT}
-              placeholder="https://images.unsplash.com/..."
+              placeholder="/nityamani-logo-rounded.png"
               {...form.register('image_url')}
             />
           </div>

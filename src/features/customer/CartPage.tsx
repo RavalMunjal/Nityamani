@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { Trash2, ShoppingCart, ArrowRight, Package, Plus, Minus, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { formatINR } from '@/lib/utils'
+import { formatINR, cn, FALLBACK_IMAGE } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
@@ -72,73 +72,22 @@ export default function CartPage() {
     },
   })
 
-  const submitOrder = useMutation({
-    mutationFn: async () => {
-      if (!user || !cartItems || cartItems.length === 0) throw new Error('Cart is empty')
-      
-      const { data: bProfile } = await supabase.from('business_profiles').select('*').eq('profile_id', user.id).maybeSingle()
-      
-      const { data: newOrder, error: orderError } = await supabase.from('orders').insert({
-        customer_id: user.id,
-        fulfilment_status: 'requested',
-        payment_status: 'unpaid',
-        billing_address_snapshot: bProfile ?? {},
-        shipping_address_snapshot: bProfile ?? {},
-      }).select().single()
-      
-      if (orderError) throw orderError
+  if (renderError) {
+    throw renderError;
+  }
 
-      const orderItems = cartItems.map((item: any) => {
-        const product = item.product || {}
-        return {
-          order_id: newOrder.id,
-          product_id: item.product_id,
-          product_name_snapshot: product.name ?? 'Unknown Product',
-          sku_snapshot: product.sku ?? 'UNKNOWN',
-          unit_snapshot: product.selling_unit ?? 'piece',
-          quantity: item.quantity,
-          unit_price_paise: product.price_paise ?? 0,
-          total_paise: (product.price_paise ?? 0) * item.quantity,
-        }
-      })
-      
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
-      if (itemsError) throw itemsError
+  if (isError) {
+    return (
+      <div className="page-container py-20 text-center animate-fade-in">
+        <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-display font-semibold text-text-main mb-2">Unable to load your cart</h2>
+        <p className="text-text-light text-sm mb-6">{(error as Error)?.message || 'An unknown error occurred.'}</p>
+        <button onClick={() => refetch()} className="btn-primary">Retry</button>
+      </div>
+    )
+  }
 
-      await supabase.from('cart_items').delete().eq('cart_id', cartItems[0].cart_id)
-      return newOrder.id
-    },
-    onSuccess: () => {
-      toast.success('Order requested successfully!')
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
-      queryClient.invalidateQueries({ queryKey: ['cart-count'] })
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
-      navigate('/app/orders')
-    },
-    onError: (err: any) => {
-      console.error(err)
-      toast.error('Failed to submit order: ' + err.message)
-    }
-  })
-
-  // Prevent crashing the whole page if a render error happens during mapping
-  try {
-    if (renderError) {
-      throw renderError;
-    }
-
-    if (isError) {
-      return (
-        <div className="page-container py-20 text-center animate-fade-in">
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-display font-semibold text-text-main mb-2">Unable to load your cart</h2>
-          <p className="text-text-light text-sm mb-6">{(error as Error)?.message || 'An unknown error occurred.'}</p>
-          <button onClick={() => refetch()} className="btn-primary">Retry</button>
-        </div>
-      )
-    }
-
-    if (isLoading) return (
+  if (isLoading) return (
       <div className="page-container py-8 space-y-4">
         {[1, 2, 3].map(i => (
           <div key={i} className="skeleton h-32 rounded-xl" />
@@ -180,10 +129,10 @@ export default function CartPage() {
               <div key={item.id} className="card p-4 flex gap-4 items-start border-surface-border">
                 <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-surface-bg flex-shrink-0 overflow-hidden border border-surface-border shadow-sm">
                   <img 
-                    src={primaryImg?.url || "https://images.unsplash.com/photo-1515082161172-2f3b9c8c9735?q=80&w=200&auto=format&fit=crop"} 
+                    src={primaryImg?.url || FALLBACK_IMAGE} 
                     alt={product.name || "Product"} 
                     className="w-full h-full object-cover" 
-                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1515082161172-2f3b9c8c9735?q=80&w=200&auto=format&fit=crop" }}
+                    onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE }}
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -220,7 +169,7 @@ export default function CartPage() {
                   </p>
                   <button className="btn-ghost btn-sm text-red-500 hover:bg-red-50 px-2"
                     onClick={() => removeItem.mutate(item.id)}
-                    disabled={removeItem.isPending || submitOrder.isPending}>
+                    disabled={removeItem.isPending}>
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -249,33 +198,17 @@ export default function CartPage() {
           </p>
         </div>
 
-        <button 
-          onClick={() => submitOrder.mutate()} 
-          disabled={submitOrder.isPending || cartItems.length === 0}
-          className="btn-primary w-full btn-lg">
-          {submitOrder.isPending ? <span className="nm-spinner" /> : <>Request Order <ArrowRight className="w-4 h-4" /></>}
-        </button>
+        <Link 
+          to="/app/checkout"
+          className={cn("btn-primary w-full btn-lg text-center flex items-center justify-center gap-2", 
+            cartItems.length === 0 && "opacity-50 pointer-events-none")}>
+          Proceed to Checkout <ArrowRight className="w-4 h-4" />
+        </Link>
         <div className="mt-3 text-center">
            <Link to="/app/products" className="text-sm font-semibold text-brand-blue hover:text-brand-red underline">
              Continue Shopping
            </Link>
         </div>
-
-        <p className="text-xs text-text-light text-center mt-3">
-          <Package className="w-3 h-3 inline mr-1" />
-          Our team will contact you to confirm delivery and payment.
-        </p>
       </div>
     )
-  } catch (err: any) {
-    console.error("Cart render crash:", err)
-    return (
-      <div className="page-container py-20 text-center animate-fade-in">
-        <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-        <h2 className="text-xl font-display font-semibold text-text-main mb-2">Something went wrong</h2>
-        <p className="text-text-light text-sm mb-6">The cart interface crashed unexpectedly.</p>
-        <button onClick={() => window.location.reload()} className="btn-primary">Reload Page</button>
-      </div>
-    )
-  }
 }

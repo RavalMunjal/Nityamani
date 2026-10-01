@@ -8,6 +8,7 @@ import CustomerLayout from '@/features/customer/CustomerLayout'
 import HomePage from '@/features/customer/HomePage'
 import ProductDetailPage from '@/features/customer/ProductDetailPage'
 import CartPage from '@/features/customer/CartPage'
+import CheckoutPage from '@/features/customer/CheckoutPage'
 import OrdersPage from '@/features/customer/OrdersPage'
 import OrderDetailPage from '@/features/customer/OrderDetailPage'
 import AdminLayout from '@/features/admin/AdminLayout'
@@ -156,6 +157,13 @@ function AppRouter() {
         <RequireAuth>
           <CustomerLayout>
             <CartPage />
+          </CustomerLayout>
+        </RequireAuth>
+      } />
+      <Route path="/app/checkout" element={
+        <RequireAuth>
+          <CustomerLayout>
+            <CheckoutPage />
           </CustomerLayout>
         </RequireAuth>
       } />

@@ -3,12 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, ChevronRight, Sparkles, TrendingUp, ShieldCheck, Truck, HeadphonesIcon, BadgeCheck, ShoppingBag, ArrowRight } from 'lucide-react'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { formatINR } from '@/lib/utils'
+import { formatINR, FALLBACK_IMAGE } from '@/lib/utils'
 import type { Product, Category, Banner } from '@/lib/types'
 
 // ── Fallbacks ─────────────────────────────────────────────────────────────
-const defaultProductImage = "https://images.unsplash.com/photo-1515082161172-2f3b9c8c9735?q=80&w=400&auto=format&fit=crop"
-const defaultCatImage = "https://images.unsplash.com/photo-1596773228919-61250269f88c?q=80&w=400&auto=format&fit=crop"
+const defaultProductImage = FALLBACK_IMAGE
+const defaultCatImage = FALLBACK_IMAGE
 
 // ── Skeleton ───────────────────────────────────────────────────────────────
 function ProductSkeleton() {

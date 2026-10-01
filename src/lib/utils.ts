@@ -5,6 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const FALLBACK_IMAGE = "/nityamani-logo-rounded.png"
+
 /** Format price in INR */
 export function formatINR(paise: number): string {
   const rupees = paise / 100
