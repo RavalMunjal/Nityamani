@@ -294,10 +294,34 @@ function AppRouter() {
   )
 }
 
+import { App as CapacitorApp } from '@capacitor/app'
+import { Capacitor } from '@capacitor/core'
+import { useEffect } from 'react'
+
+function CapacitorHardwareBackButton() {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      if (window.location.pathname === '/app' || window.location.pathname === '/' || !canGoBack) {
+        CapacitorApp.exitApp();
+      } else {
+        window.history.back();
+      }
+    });
+
+    return () => {
+      listener.then(l => l.remove());
+    };
+  }, []);
+
+  return null;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <CapacitorHardwareBackButton />
         <AuthProvider>
           <AppRouter />
           <Toaster

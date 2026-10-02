@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { Capacitor } from '@capacitor/core'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -25,13 +26,15 @@ if (typeof window !== 'undefined') {
   }
 }
 
+const isNative = Capacitor.isNativePlatform()
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storageKey: isAdminApp ? 'sb-admin-auth-token' : 'sb-customer-auth-token',
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
+    storage: typeof window !== 'undefined' ? (isNative ? window.localStorage : window.sessionStorage) : undefined,
   },
 })
 
