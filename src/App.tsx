@@ -66,10 +66,9 @@ function RequireAdmin({ children }: { children: ReactNode }) {
 }
 
 function RedirectIfAuthed({ children }: { children: ReactNode }) {
-  const { user, isLoading, status, isAdmin } = useAuth()
+  const { user, isLoading, status } = useAuth()
   if (isLoading || status === 'AUTHENTICATED_PROFILE_LOADING') return <LoadingScreen />
   if (user) {
-    if (isAdmin) return <Navigate to="/admin" replace />
     return <Navigate to="/app" replace />
   }
   return <>{children}</>
