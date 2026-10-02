@@ -289,16 +289,30 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <p className="font-bold text-text-main text-sm sm:text-base">Android Device</p>
-                    <p className="text-text-muted text-xs">Direct Web PWA / APK</p>
+                    <p className="text-text-muted text-xs">Native App</p>
                   </div>
                 </div>
                 <p className="text-xs text-text-muted leading-relaxed mb-4">
-                  Open in Chrome on Android and tap <strong className="text-text-main">&quot;Add to Home Screen&quot;</strong> to install the full-featured app instantly without downloads.
+                  Download the official Nityamani Android application for the best mobile experience.
                 </p>
+                <a
+                  href={import.meta.env.VITE_ANDROID_APK_URL || '/nityamani-v1.0.0.apk'}
+                  onClick={(e) => {
+                    // It will download automatically
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm transition-colors mb-4"
+                >
+                  Download Android App
+                </a>
               </div>
-              <div className="pt-3 border-t border-surface-border flex items-center gap-2 text-xs font-semibold text-green-700">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Instant Offline Sync &amp; Push Updates</span>
+              <div className="pt-3 border-t border-surface-border flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-green-700">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Full-screen Native App</span>
+                </div>
+                <p className="text-[10px] text-text-muted">
+                  Alternatively: Open in Chrome and tap &quot;Add to Home Screen&quot; for the web app.
+                </p>
               </div>
             </div>
 
