@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
   const adminForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: 'admin@nityamani.com',
+      email: '',
       password: '',
     },
   })
@@ -116,7 +116,7 @@ export default function AdminLoginPage() {
                 type="email"
                 autoComplete="email"
                 className={cn('field-input', adminForm.formState.errors.email && 'field-input-error')}
-                placeholder="admin@nityamani.com"
+                placeholder="Enter admin email"
                 {...adminForm.register('email')}
               />
             </Field>
@@ -141,19 +141,7 @@ export default function AdminLoginPage() {
               </div>
             </Field>
 
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-text-muted">Default admin login:</span>
-              <button
-                type="button"
-                onClick={() => {
-                  adminForm.setValue('email', 'admin@nityamani.com')
-                  adminForm.setValue('password', 'admin123')
-                }}
-                className="text-brand-red font-semibold hover:underline"
-              >
-                Auto-fill Demo (admin123)
-              </button>
-            </div>
+
 
             <button
               type="submit"
